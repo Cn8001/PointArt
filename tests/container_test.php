@@ -1,14 +1,16 @@
 <?php
 /**
- * ClassLoader Tests — actual UserController, no mocks
- * Run: php tests/classloader_test.php
+ * Container Tests
+ * Run: php tests/container_test.php
  */
 
 require_once __DIR__ . '/../framework/attributes/Route.php';
 require_once __DIR__ . '/../framework/attributes/Router.php';
 require_once __DIR__ . '/../framework/attributes/Service.php';
 require_once __DIR__ . '/../framework/core/ClassLoader.php';
+require_once __DIR__ . '/../framework/core/Container.php';
 
+use PointStart\Core\Container;
 use PointStart\Core\ClassLoader;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -36,73 +38,37 @@ function assert_equals(string $label, mixed $expected, mixed $actual): void {
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 
-$controllersDir = __DIR__ . '/../app/components';
-
-$loader = new ClassLoader();
-$loader->loadClasses($controllersDir);
-
-// ─── Generic: all .php files in controllers/ must be loaded ───────────────────
-
-$phpFiles = array_filter(
-    scandir($controllersDir),
-    fn($f) => str_ends_with($f, '.php')
-);
-
-foreach ($phpFiles as $file) {
-    $className = basename($file, '.php');
-    assert_true(
-        "$className is defined after loadClasses()",
-        class_exists($className, false)
-    );
-}
+$container = new Container();
+$ref = new ReflectionClass($container);
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-// 1. Class loaded into memory
+// 1. Container instantiates
+assert_true('Container instantiates', $container instanceof Container);
+
+// 2. $instances starts empty
+$instancesProp = $ref->getProperty('instances');
+$instancesProp->setAccessible(true);
+assert_equals('$instances is empty on construct', [], $instancesProp->getValue($container));
+
+// 3. loadClassLoader() loads classes into memory
+$loadClassLoader = $ref->getMethod('loadClassLoader');
+$loadClassLoader->setAccessible(true);
+$loadClassLoader->invoke($container);
+
+assert_true('UserController is defined after loadClassLoader()', class_exists('UserController', false));
+assert_true('UserService is defined after loadClassLoader()',    class_exists('UserService', false));
+
+// 4. generateInstances() creates instances for given class names
+$generateInstances = $ref->getMethod('generateInstances');
+$generateInstances->setAccessible(true);
+$generateInstances->invoke($container, ['UserService' => 'UserService']);
+
+$instances = $instancesProp->getValue($container);
 assert_true(
-    'UserController is defined after loadClasses()',
-    class_exists('UserController', false)
+    'generateInstances() creates a UserService instance',
+    isset($instances['UserService']) && $instances['UserService'] instanceof UserService
 );
-
-$ref = new ReflectionClass('UserController');
-
-// 2. #[Router] on class
-assert_true(
-    'UserController has #[Router] attribute',
-    count($ref->getAttributes(PointStart\Attributes\Router::class)) === 1
-);
-
-// 3. No #[Service] on class
-assert_true(
-    'UserController has no #[Service] attribute',
-    count($ref->getAttributes(PointStart\Attributes\Service::class)) === 0
-);
-
-// 4. Exactly 2 methods have #[Route]
-$routedMethods = [];
-foreach ($ref->getMethods() as $method) {
-    if (!empty($method->getAttributes(PointStart\Attributes\Route::class))) {
-        $routedMethods[] = $method->getName();
-    }
-}
-
-assert_equals(
-    'UserController has exactly 2 #[Route] methods',
-    ['index', 'show'],
-    $routedMethods
-);
-
-// 5. helper() has no #[Route]
-assert_true(
-    'UserController::helper() has no #[Route]',
-    !in_array('helper', $routedMethods)
-);
-
-// 6. Methods return expected values
-$controller = new UserController();
-
-assert_equals('index() returns "user.list"', 'user.list', $controller->index());
-assert_equals('show() returns "user.show"',  'user.show', $controller->show());
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 

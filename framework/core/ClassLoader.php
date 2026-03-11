@@ -8,7 +8,7 @@ namespace PointStart\Core{
     use PointStart\Attributes\Service;
     use ReflectionClass;
 
-    class RouteLoader{
+    class ClassLoader{
         private static array $routes = [];
         private static array $services = [];
 
@@ -72,6 +72,14 @@ namespace PointStart\Core{
                     "class" => $class,
                     "method" => $methodName
             ];
+        }
+
+        public static function getRoutes(){
+            return self::$routes;
+        }
+
+        public static function getServices(){
+            return self::$services;
         }
     }
 }
