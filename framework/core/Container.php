@@ -10,11 +10,12 @@ class Container{
     
     public function __construct(){
         $this->instances = [];
+        $this->loadClassLoader();
     }
 
     public function loadContainer(){
-        generateInstances($routes);
-        generateInstances($services);
+        $this->generateInstances($routes);
+        $this->generateInstances($services);
     }
 
     private function loadClassLoader(){
