@@ -41,68 +41,61 @@ $controllersDir = __DIR__ . '/../app/components';
 $loader = new ClassLoader();
 $loader->loadClasses($controllersDir);
 
-// ─── Generic: all .php files in controllers/ must be loaded ───────────────────
-
-$phpFiles = array_filter(
-    scandir($controllersDir),
-    fn($f) => str_ends_with($f, '.php')
-);
-
-foreach ($phpFiles as $file) {
-    $className = basename($file, '.php');
-    assert_true(
-        "$className is defined after loadClasses()",
-        class_exists($className, false)
-    );
-}
+$routes   = ClassLoader::getRoutes();
+$services = ClassLoader::getServices();
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-// 1. Class loaded into memory
+// 1. Route table is not empty
+assert_true('Route table is populated', !empty($routes));
+
+// 2. UserController is NOT loaded into memory — autoloader not triggered
 assert_true(
-    'UserController is defined after loadClasses()',
+    'UserController is NOT in memory (lazy)',
+    !class_exists('UserController', false)
+);
+
+// 3. Routes are registered correctly
+assert_true(
+    'GET /user-list maps to UserController::index',
+    isset($routes['GET']['/user-list']) &&
+    $routes['GET']['/user-list']['class']  === 'UserController' &&
+    $routes['GET']['/user-list']['method'] === 'index'
+);
+
+assert_true(
+    'GET /user-show maps to UserController::show',
+    isset($routes['GET']['/user-show']) &&
+    $routes['GET']['/user-show']['class']  === 'UserController' &&
+    $routes['GET']['/user-show']['method'] === 'show'
+);
+
+// 4. helper() is not in the route table
+$allMethods = array_merge(...array_values($routes));
+assert_true(
+    'helper() is not registered as a route',
+    !in_array('helper', array_column($allMethods, 'method'))
+);
+
+// 5. UserService is registered
+assert_true(
+    'UserService is registered',
+    isset($services['UserService'])
+);
+
+// 6. Dispatch — only now load the class
+$match = $routes['GET']['/user-list'];
+$controller = new $match['class']();
+
+assert_true(
+    'UserController is loaded after dispatch',
     class_exists('UserController', false)
 );
-
-$ref = new ReflectionClass('UserController');
-
-// 2. #[Router] on class
 assert_true(
-    'UserController has #[Router] attribute',
-    count($ref->getAttributes(PointStart\Attributes\Router::class)) === 1
+    'TestController is NOT loaded because it was never dispatched',
+    !class_exists('TestController', false)
 );
-
-// 3. No #[Service] on class
-assert_true(
-    'UserController has no #[Service] attribute',
-    count($ref->getAttributes(PointStart\Attributes\Service::class)) === 0
-);
-
-// 4. Exactly 2 methods have #[Route]
-$routedMethods = [];
-foreach ($ref->getMethods() as $method) {
-    if (!empty($method->getAttributes(PointStart\Attributes\Route::class))) {
-        $routedMethods[] = $method->getName();
-    }
-}
-
-assert_equals(
-    'UserController has exactly 2 #[Route] methods',
-    ['index', 'show'],
-    $routedMethods
-);
-
-// 5. helper() has no #[Route]
-assert_true(
-    'UserController::helper() has no #[Route]',
-    !in_array('helper', $routedMethods)
-);
-
-// 6. Methods return expected values
-$controller = new UserController();
-
-assert_equals('index() returns "user.list"', 'user.list', $controller->index());
-assert_equals('show() returns "user.show"',  'user.show', $controller->show());
+assert_equals('index() returns "user.list"', 'user.list', $controller->{$match['method']}());
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 

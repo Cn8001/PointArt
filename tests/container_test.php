@@ -11,7 +11,6 @@ require_once __DIR__ . '/../framework/core/ClassLoader.php';
 require_once __DIR__ . '/../framework/core/Container.php';
 
 use PointStart\Core\Container;
-use PointStart\Core\ClassLoader;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -40,33 +39,29 @@ function assert_equals(string $label, mixed $expected, mixed $actual): void {
 
 $container = new Container();
 $ref = new ReflectionClass($container);
+$instancesProp = $ref->getProperty('instances');
+$instancesProp->setAccessible(true);
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 // 1. Container instantiates
 assert_true('Container instantiates', $container instanceof Container);
 
-// 2. $instances starts empty
-$instancesProp = $ref->getProperty('instances');
-$instancesProp->setAccessible(true);
-assert_equals('$instances is empty on construct', [], $instancesProp->getValue($container));
+// 2. loadClassLoader() registers autoloader — classes NOT in memory yet (lazy)
+assert_true('UserController NOT in memory after construct', !class_exists('UserController', false));
+assert_true('UserService NOT in memory after construct',    !class_exists('UserService', false));
 
-// 3. loadClassLoader() loads classes into memory
-$loadClassLoader = $ref->getMethod('loadClassLoader');
-$loadClassLoader->setAccessible(true);
-$loadClassLoader->invoke($container);
+// 3. $instances is empty before loadContainer()
+assert_equals('$instances is empty before loadContainer()', [], $instancesProp->getValue($container));
 
-assert_true('UserController is defined after loadClassLoader()', class_exists('UserController', false));
-assert_true('UserService is defined after loadClassLoader()',    class_exists('UserService', false));
-
-// 4. generateInstances() creates instances for given class names
+// 4. generateInstances() stores instances in $this->instances
 $generateInstances = $ref->getMethod('generateInstances');
 $generateInstances->setAccessible(true);
 $generateInstances->invoke($container, ['UserService' => 'UserService']);
 
 $instances = $instancesProp->getValue($container);
 assert_true(
-    'generateInstances() creates a UserService instance',
+    'generateInstances() creates and stores a UserService instance',
     isset($instances['UserService']) && $instances['UserService'] instanceof UserService
 );
 

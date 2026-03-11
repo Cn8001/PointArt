@@ -7,6 +7,7 @@ class TestController{
 
     #[Route("/test", "GET")]
     public function test(){
+        echo "Hello world";
         return 'test';
     }
 }

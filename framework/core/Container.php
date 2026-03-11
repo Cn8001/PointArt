@@ -19,7 +19,7 @@ class Container{
     }
 
     private function loadClassLoader(){
-        // 1. Load all classes
+        // 1. Load all required classes
         $loader = new ClassLoader();
         $loader->loadClasses(__DIR__ . "/../../app/components");
 
@@ -27,7 +27,10 @@ class Container{
 
     private function generateInstances($classNames){
         foreach($classNames as $class){
+            if(!isset($this->instances[$class])){
+
             $this->instances[$class] = new $class;
+            }
         }
     }
 }

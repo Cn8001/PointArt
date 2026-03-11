@@ -11,21 +11,56 @@ namespace PointStart\Core{
     class ClassLoader{
         private static array $routes = [];
         private static array $services = [];
+        private static string $cacheFile = __DIR__ . '/../../cache/registry.ser';
 
-        // Load classes from directory and include them
-        public function loadClasses($dir){
-            $files = scandir($dir);
-            foreach($files as $file){
-                if($file == ".." || $file == ".") continue;
+        // Register autoloader for a directory
+        private function registerAutoloader(string $dir): void {
+            spl_autoload_register(function(string $class) use ($dir) {
+                $file = $dir . '/' . $class . '.php';
+                if (file_exists($file)) {
+                    require $file;
+                }
+            });
+        }
 
-                $path = $dir . "/" . $file;
-                if(is_dir($path)){ // Relative load
+        // Load classes — use cache if available, scan if not
+        public function loadClasses(string $dir): void {
+            $this->registerAutoloader($dir);
+
+            if (file_exists(self::$cacheFile)) {
+                // Cache hit — no scanning, no Reflection
+                $cache = unserialize(file_get_contents(self::$cacheFile));
+                self::$routes   = $cache['routes'];
+                self::$services = $cache['services'];
+                return;
+            }
+
+            // Cache miss — scan all files, load via autoloader, read attributes
+            foreach (scandir($dir) as $file) {
+                if ($file === '.' || $file === '..') continue;
+
+                $path = $dir . '/' . $file;
+                if (is_dir($path)) {
                     $this->loadClasses($path);
                 } else {
-
-                    require_once $path; // First include
-                    $this->register(basename($file,".php")); // Load class
+                    $this->register(basename($file, '.php'));
                 }
+            }
+
+            // Persist to cache
+            if (!is_dir(dirname(self::$cacheFile))) {
+                mkdir(dirname(self::$cacheFile), 0777, true);
+            }
+            file_put_contents(self::$cacheFile, serialize([
+                'routes'   => self::$routes,
+                'services' => self::$services,
+            ]));
+        }
+
+        // Clear cache (call after deploying new controllers)
+        public static function clearCache(): void {
+            if (file_exists(self::$cacheFile)) {
+                unlink(self::$cacheFile);
             }
         }
 
