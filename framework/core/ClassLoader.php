@@ -5,6 +5,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 namespace PointStart\Core{
+    require_once __DIR__ . "/../attributes/Route.php";
+    require_once __DIR__ . "/../attributes/Router.php";
+    require_once __DIR__ . "/../attributes/Service.php";
+    require_once __DIR__ . "/../attributes/Wired.php";
+
     use PointStart\Attributes\Service;
     use ReflectionClass;
 
@@ -76,15 +81,14 @@ namespace PointStart\Core{
 
                 }
                 if($instance instanceof \PointStart\Attributes\Router){
-
-                    $this->registerRoutes($reflection);
+                    $this->registerRoutes($reflection, $instance->path);
                 }
             }
         }
 
         // Get all routes inside a router class and register
-        private function registerRoutes($reflection){
-            
+        private function registerRoutes($reflection, $prefix = ''){
+
             //Get all methods inside class
             $methods = $reflection->getMethods();
 
@@ -94,7 +98,8 @@ namespace PointStart\Core{
                 foreach($attributes as $attribute){
                     $instance = $attribute->newInstance();
                     if($instance instanceof \PointStart\Attributes\Route){
-                        $this->register_route($instance->httpMethod, $instance->path, $reflection->getName(), $method->getName());
+                        $fullPath = rtrim($prefix, '/') . '/' . ltrim($instance->path, '/');
+                        $this->register_route($instance->httpMethod, $fullPath, $reflection->getName(), $method->getName());
                     }
                 }
             }

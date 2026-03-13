@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-namespace PointStart\Core;
+namespace PointStart\Core{
+    require_once __DIR__ . '/../attributes/Wired.php';
 use ReflectionClass;
 use PointStart\Attributes\Wired;
 class Container{
@@ -16,8 +17,7 @@ class Container{
     }
 
     public function loadContainer(){
-        $this->generateInstances($routes);
-        $this->generateInstances($services);
+        // No eager instantiation — classes are created on demand via getInstance()
     }
 
     private function loadClassLoader(){
@@ -74,7 +74,7 @@ class Container{
                 $this->instances[$class] = $instance;
             }
             
-            }
+        }
     }
 
     private function injectDependencies($instance, $reflection, $dependencies){
@@ -87,8 +87,16 @@ class Container{
         }
 
     }
+
+    public function getInstance($className){
+        if(!isset($this->instances[$className])){
+            $this->generateInstances([$className]);
+        }
+        return $this->instances[$className] ?? null;
+    }
 }
-//TODO: Create parameter resolver for constructor injection, and implement it in generateInstances 
-//TODO: Generate instances should generate only required instances based on routes and their dependencies, not all services and controllers (OR classloader should only load classes that are actually used in routes, not all classes in components) 
+}
+//TODO: Create parameter resolver for constructor injection, and implement it in generateInstances - done
+//TODO: Generate instances should generate only required instances based on routes and their dependencies, not all services and controllers (OR classloader should only load classes that are actually used in routes, not all classes in components) - partially 
 //TODO: Implement singleton services (e.g. database connection) and transient services (e.g. request-scoped)
 ?>
