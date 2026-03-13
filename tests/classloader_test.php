@@ -13,26 +13,7 @@ use PointStart\Core\ClassLoader;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-$passed = 0;
-$failed = 0;
-
-function assert_true(string $label, bool $condition): void {
-    global $passed, $failed;
-    if ($condition) { echo "[PASS] $label\n"; $passed++; }
-    else             { echo "[FAIL] $label\n"; $failed++; }
-}
-
-function assert_equals(string $label, mixed $expected, mixed $actual): void {
-    global $passed, $failed;
-    if ($expected === $actual) {
-        echo "[PASS] $label\n";
-        $passed++;
-    } else {
-        echo "[FAIL] $label — expected " . var_export($expected, true)
-           . ", got " . var_export($actual, true) . "\n";
-        $failed++;
-    }
-}
+require_once __DIR__ . '/test_helpers.php';
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 
@@ -96,9 +77,3 @@ assert_true(
     !class_exists('TestController', false)
 );
 assert_equals('index() returns "user.list"', 'user.list', $controller->{$match['method']}());
-
-// ─── Summary ──────────────────────────────────────────────────────────────────
-
-echo "\n" . ($failed === 0 ? "All tests passed." : "$failed test(s) failed.")
-   . " ($passed passed, $failed failed)\n";
-exit($failed > 0 ? 1 : 0);

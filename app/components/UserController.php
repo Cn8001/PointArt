@@ -5,6 +5,8 @@ use PointStart\Attributes\Service;
 
 #[Router]
 class UserController {
+    #[Wired]
+    private UserRepository $userRepository;
 
     #[Route('/user-list')]
     public function index(): string {

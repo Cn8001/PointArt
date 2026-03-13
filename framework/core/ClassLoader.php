@@ -77,16 +77,15 @@ namespace PointStart\Core{
                 }
                 if($instance instanceof \PointStart\Attributes\Router){
 
-                    $this->registerRoutes($className);
+                    $this->registerRoutes($reflection);
                 }
             }
         }
 
         // Get all routes inside a router class and register
-        private function registerRoutes($routeclass){
+        private function registerRoutes($reflection){
             
             //Get all methods inside class
-            $reflection = new ReflectionClass($routeclass);
             $methods = $reflection->getMethods();
 
             //Check for attributes in each method
@@ -95,7 +94,7 @@ namespace PointStart\Core{
                 foreach($attributes as $attribute){
                     $instance = $attribute->newInstance();
                     if($instance instanceof \PointStart\Attributes\Route){
-                        $this->register_route($instance->httpMethod, $instance->path, $routeclass, $method->getName());
+                        $this->register_route($instance->httpMethod, $instance->path, $reflection->getName(), $method->getName());
                     }
                 }
             }
