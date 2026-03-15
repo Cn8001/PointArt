@@ -1,13 +1,14 @@
 <?php
 use PointStart\Attributes\Router;
 use PointStart\Attributes\Route;
+use PointStart\Core\Renderer;
 
 #[Router(path: "/", name: "TestController")]
 class TestController{
 
-    #[Route("/test", "GET")]
-    public function test(){
-        require_once __DIR__ . "/../views/test.php";
+    #[Route("/test/{id}", "GET")]
+    public function test($id){
+        return Renderer::render("test",["id" => $id]);
     }
 
     #[Route("","GET")]

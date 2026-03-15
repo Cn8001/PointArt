@@ -5,9 +5,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 namespace PointStart\Core{
+    require_once __DIR__ . "/../../config.php";
     require_once __DIR__ . "/Container.php";
     require_once __DIR__ . "/ClassLoader.php";
     require_once __DIR__ . "/RouteHandler.php";
+    require_once __DIR__ . "/Renderer.php";
 
     class App{
         private Container $container;
@@ -37,4 +39,10 @@ namespace PointStart\Core{
         }
     }
 }
+//TODO: Implement singleton services (e.g. database connection) and transient services (e.g. request-scoped)
+//TODO: Make HttpMethod as enum
+//TODO: Make Content-Type header setting (RestController over Controller)
+//TODO: Implement orm and database connection management
+//TODO: Implement error handling (e.g. 404, 500, etc.) and custom error pages
+//TODO: Implement middleware system (e.g. for authentication, logging, etc.)
 ?>

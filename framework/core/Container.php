@@ -96,7 +96,4 @@ class Container{
     }
 }
 }
-//TODO: Create parameter resolver for constructor injection, and implement it in generateInstances - done
-//TODO: Generate instances should generate only required instances based on routes and their dependencies, not all services and controllers (OR classloader should only load classes that are actually used in routes, not all classes in components) - partially 
-//TODO: Implement singleton services (e.g. database connection) and transient services (e.g. request-scoped)
 ?>
