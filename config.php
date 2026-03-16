@@ -7,21 +7,21 @@
 defined('VIEW_DIRECTORY') || define('VIEW_DIRECTORY', __DIR__ . "/app/views/");
 return [
     'db' => [
-        'driver' => 'sqlite',          // sqlite | mysql | pgsql
+        'driver'   => $_ENV['DB_DRIVER']   ?? 'sqlite',
 
         // SQLite
-        'path'     => __DIR__ . '/database.sqlite',
+        'path'     => $_ENV['DB_PATH']     ?? __DIR__ . '/database.sqlite',
 
         // MySQL / PostgreSQL
-        'host'     => 'localhost',
-        'port'     => 3306,            // 5432 for pgsql
-        'database' => 'pointstart',
-        'username' => 'root',
-        'password' => '',
-        'charset'  => 'utf8mb4',       // mysql only
+        'host'     => $_ENV['DB_HOST']     ?? 'localhost',
+        'port'     => $_ENV['DB_PORT']     ?? 3306,
+        'database' => $_ENV['DB_DATABASE'] ?? 'pointstart',
+        'username' => $_ENV['DB_USERNAME'] ?? 'root',
+        'password' => $_ENV['DB_PASSWORD'] ?? '',
+        'charset'  => $_ENV['DB_CHARSET']  ?? 'utf8mb4',
     ],
     'app' => [
-          'debug' => true,
+        'debug' => filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN),
     ],
 ];
 ?>
