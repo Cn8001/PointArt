@@ -56,7 +56,7 @@ namespace PointStart\Core{
             }
 
             if(!isset($destination)){
-                return404();
+                httpError(404);
                 return;
             }
 
@@ -65,7 +65,7 @@ namespace PointStart\Core{
 
             $classInstance = $this->container->getInstance($controllerClass);
             if(!isset($classInstance)){
-                return404();
+                httpError(404);
                 return;
             }
 

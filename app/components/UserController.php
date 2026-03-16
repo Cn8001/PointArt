@@ -1,22 +1,75 @@
 <?php
 use PointStart\Attributes\Router;
 use PointStart\Attributes\Route;
-use PointStart\Attributes\Service;
+use PointStart\Attributes\RequestParam;
+use PointStart\Core\Renderer;
 use PointStart\Attributes\Wired;
 
 #[Router(name: 'user', path: '/user')]
 class UserController {
     #[Wired]
-    private UserService $userService;
+    private UserRepository $userRepository;
 
-    #[Route('/user-list')]
+    // GET /user/list
+    #[Route('/list', 'GET')]
     public function index(): string {
-        return 'user.list';
+        $users = $this->userRepository->findAll();
+        return Renderer::render('user.list', ['users' => $users]);
     }
 
-    #[Route('/user-show/{id}')]
-    public function show($id): string {
-        return 'user.show ' . $id;
+    // GET /user/show/{id}
+    #[Route('/show/{id}', 'GET')]
+    public function show(int $id): string {
+        $user = User::find($id);
+        if ($user === null) {
+            return Renderer::render('user.notfound');
+        }
+        return Renderer::render('user.show', ['user' => $user]);
+    }
+
+    // GET /user/search?name=foo
+    #[Route('/search', 'GET')]
+    public function search(string $name = ''): string {
+        $users = $this->userRepository->findByName($name);
+        return Renderer::render('user.list', ['users' => $users]);
+    }
+
+    // POST /user/create
+    #[Route('/create', 'POST')]
+    public function create(
+        #[RequestParam] string $name,
+        #[RequestParam] string $email
+    ): string {
+        $user        = new User();
+        $user->name  = $name;
+        $user->email = $email;
+        $user->save();
+        return Renderer::render('user.show', ['user' => $user]);
+    }
+
+    // POST /user/update/{id}
+    #[Route('/update/{id}', 'POST')]
+    public function update(
+        int $id,
+        #[RequestParam] string $name,
+        #[RequestParam] string $email
+    ): string {
+        $user = User::find($id);
+        if ($user === null) {
+            return Renderer::render('user.notfound');
+        }
+        $user->name  = $name;
+        $user->email = $email;
+        $user->save();
+        return Renderer::render('user.show', ['user' => $user]);
+    }
+
+    // POST /user/delete/{id}
+    #[Route('/delete/{id}', 'POST')]
+    public function delete(int $id): string {
+        $this->userRepository->deleteById($id);
+        $users = $this->userRepository->findAll();
+        return Renderer::render('user.list', ['users' => $users]);
     }
 
     public function helper(): string {

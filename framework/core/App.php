@@ -17,8 +17,16 @@ namespace PointStart\Core{
         private Container $container;
         private RouteHandler $routeHandler;
         private ClassLoader $classLoader;
+        private bool $debug;
 
         public function __construct(){
+            $config = require __DIR__ . '/../../config.php';
+            $this->debug = $config['app']['debug'] ?? false;
+
+            set_exception_handler(function(\Throwable $e){
+                $this->handleError($e);
+            });
+
             $this->container = new Container();
             $this->classLoader = new ClassLoader();
             $this->routeHandler = new RouteHandler($this->container,$this->classLoader);
@@ -39,12 +47,23 @@ namespace PointStart\Core{
                 }
             }
         }
+
+        private function handleError(\Throwable $e): void {
+            http_response_code(500);
+            if($this->debug){
+                echo '<pre style="font-family:monospace;padding:20px;background:#fff3f3;border:1px solid #f00">';
+                echo '<strong>' . get_class($e) . '</strong>: ' . htmlspecialchars($e->getMessage()) . "\n\n";
+                echo htmlspecialchars($e->getTraceAsString());
+                echo '</pre>';
+            } else {
+                httpError(500);
+            }
+        }
     }
 }
 //TODO: Implement singleton services (e.g. database connection) and transient services (e.g. request-scoped)
 //TODO: Make HttpMethod as enum
 //TODO: Make Content-Type header setting (RestController over Controller)
-//TODO: Implement orm and database connection management
 //TODO: Implement error handling (e.g. 404, 500, etc.) and custom error pages
 //TODO: Implement middleware system (e.g. for authentication, logging, etc.)
 ?>

@@ -66,7 +66,7 @@ assert_true(
 
 // 6. Dispatch — only now load the class
 $match = $routes['GET']['/user/user-list'];
-$controller = new $match['class']();
+new $match['class']();
 
 assert_true(
     'UserController is loaded after dispatch',
@@ -77,4 +77,4 @@ assert_true(
     'TestController is registered in route table',
     isset($routes['GET']) && in_array('TestController', array_column(array_merge(...array_values($routes)), 'class'))
 );
-assert_equals('index() returns "user.list"', 'user.list', $controller->{$match['method']}());
+assert_equals('index() route method name', 'index', $match['method']);
