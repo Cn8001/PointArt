@@ -10,6 +10,8 @@ namespace PointStart\Core{
     require_once __DIR__ . "/ClassLoader.php";
     require_once __DIR__ . "/RouteHandler.php";
     require_once __DIR__ . "/Renderer.php";
+    require_once __DIR__ . "/../ORM/Model.php";
+    require_once __DIR__ . "/../ORM/Repository.php";
 
     class App{
         private Container $container;

@@ -10,8 +10,8 @@ class UserController {
     private UserService $userService;
 
     #[Route('/user-list')]
-    public function index() {
-        return $this->userService->getUserList();
+    public function index(): string {
+        return 'user.list';
     }
 
     #[Route('/user-show/{id}')]

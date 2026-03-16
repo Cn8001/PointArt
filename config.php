@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-define('VIEW_DIRECTORY', __DIR__ . "/app/views/");
+defined('VIEW_DIRECTORY') || define('VIEW_DIRECTORY', __DIR__ . "/app/views/");
 return [
     'db' => [
         'host' => 'localhost',

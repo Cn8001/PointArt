@@ -86,9 +86,9 @@ $app3->run();
 $instancesBeforeDispatch = $instancesProp3->getValue($container3);
 assert_equals('No instances before dispatch', 0, count($instancesBeforeDispatch));
 
-// Dispatch to /test — only TestController should be instantiated
+// Dispatch to / — only TestController should be instantiated
 ob_start();
-$app3->onRequest('/test', 'GET');
+$app3->onRequest('/', 'GET');
 ob_end_clean();
 
 $instancesAfterDispatch = $instancesProp3->getValue($container3);
