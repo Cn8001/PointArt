@@ -21,10 +21,10 @@ class Container{
     }
 
     private function loadClassLoader(){
-        // 1. Load all required classes
         $loader = new ClassLoader();
         $loader->loadClasses(__DIR__ . "/../../app/components");
-
+        $loader->loadClasses(__DIR__ . "/../../app/models");
+        $loader->loadClasses(__DIR__ . "/../../app/repositories");
     }
 
     
@@ -69,7 +69,9 @@ class Container{
                     }
                 }
                 $reflection = new ReflectionClass($class);
-                $instance = $reflection->newInstance();
+                $instance = is_subclass_of($class, \PointStart\ORM\Repository::class)
+                    ? $class::make()
+                    : $reflection->newInstance();
                 $this->injectDependencies($instance, $reflection, $dependencies);
                 $this->instances[$class] = $instance;
             }

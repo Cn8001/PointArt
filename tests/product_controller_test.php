@@ -7,7 +7,7 @@
 
 require_once __DIR__ . '/test_helpers.php';
 require_once __DIR__ . '/../framework/attributes/Entity.php';
-require_once __DIR__ . '/../framework/attributes/Colum.php';
+require_once __DIR__ . '/../framework/attributes/Column.php';
 require_once __DIR__ . '/../framework/attributes/Id.php';
 require_once __DIR__ . '/../framework/attributes/Query.php';
 require_once __DIR__ . '/../framework/attributes/Route.php';

@@ -6,7 +6,7 @@
  */
 
 require_once __DIR__ . '/../framework/attributes/Entity.php';
-require_once __DIR__ . '/../framework/attributes/Colum.php';
+require_once __DIR__ . '/../framework/attributes/Column.php';
 require_once __DIR__ . '/../framework/attributes/Id.php';
 require_once __DIR__ . '/../framework/ORM/Model.php';
 require_once __DIR__ . '/../framework/ORM/Repository.php';

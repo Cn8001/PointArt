@@ -1,9 +1,7 @@
 <?php
 use PointStart\ORM\Repository;
 use PointStart\Attributes\Query;
-use PointStart\Attributes\Service;
 
-#[Service]
 abstract class ProductRepository extends Repository {
     protected string $entityClass = Product::class;
 

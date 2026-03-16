@@ -11,6 +11,10 @@ namespace PointStart\ORM{
     use PointStart\Attributes\Entity;
     use PointStart\Attributes\Id;
 
+    require_once __DIR__ . '/../attributes/Entity.php';
+    require_once __DIR__ . '/../attributes/Column.php';
+    require_once __DIR__ . '/../attributes/Id.php';
+
     abstract class Model{
         public static ?PDO $pdo = null;
 
@@ -19,9 +23,16 @@ namespace PointStart\ORM{
                 return Model::$pdo;
             }
             $config = require __DIR__ . '/../../config.php';
-            $db = $config['db'];
-            $dsn = "mysql:host={$db['host']};port={$db['port']};dbname={$db['database']};charset={$db['charset']}";
-            Model::$pdo = new PDO($dsn, $db['username'], $db['password'], [
+            $db  = $config['db'];
+            $dsn = match($db['driver']){
+                'sqlite'   => "sqlite:{$db['path']}",
+                'mysql'    => "mysql:host={$db['host']};port={$db['port']};dbname={$db['database']};charset={$db['charset']}",
+                'pgsql'    => "pgsql:host={$db['host']};port={$db['port']};dbname={$db['database']}",
+                default    => throw new \RuntimeException("Unsupported driver: {$db['driver']}")
+            };
+            $user = $db['username'] ?? null;
+            $pass = $db['password'] ?? null;
+            Model::$pdo = new PDO($dsn, $user, $pass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);

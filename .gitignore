@@ -1,2 +1,3 @@
 docs/SYSTEMDOC.md
 cache/registry.ser
+*.sqlite

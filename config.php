@@ -7,12 +7,18 @@
 defined('VIEW_DIRECTORY') || define('VIEW_DIRECTORY', __DIR__ . "/app/views/");
 return [
     'db' => [
-        'host' => 'localhost',
-        'port' => 3306,
+        'driver' => 'sqlite',          // sqlite | mysql | pgsql
+
+        // SQLite
+        'path'     => __DIR__ . '/database.sqlite',
+
+        // MySQL / PostgreSQL
+        'host'     => 'localhost',
+        'port'     => 3306,            // 5432 for pgsql
+        'database' => 'pointstart',
         'username' => 'root',
         'password' => '',
-        'database' => 'test_db',
-        'charset' => 'utf8mb4',
+        'charset'  => 'utf8mb4',       // mysql only
     ],
     'app' => [
           'debug' => true,
