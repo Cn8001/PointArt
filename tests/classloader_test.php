@@ -1,6 +1,6 @@
 <?php
 /**
- * ClassLoader Tests — actual UserController, no mocks
+ * ClassLoader Tests — route scanning, service registration, lazy loading
  * Run: php tests/classloader_test.php
  */
 
@@ -11,70 +11,108 @@ require_once __DIR__ . '/../framework/core/ClassLoader.php';
 
 use PointStart\Core\ClassLoader;
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 require_once __DIR__ . '/test_helpers.php';
+
+// ─── Fixture — lightweight controller with no dependencies ───────────────────
+
+$fixtureFile = __DIR__ . '/../app/components/_ScanTestController.php';
+file_put_contents($fixtureFile, '<?php
+use PointStart\Attributes\Router;
+use PointStart\Attributes\Route;
+use PointStart\Attributes\HttpMethod;
+use PointStart\Attributes\Service;
+#[Router(path: "/scantest", name: "_scantest")]
+#[Service(name: "_ScanTestService")]
+class _ScanTestController {
+    #[Route("/hello", HttpMethod::GET)]
+    public function hello(): string { return "hello"; }
+    #[Route("/world", HttpMethod::POST)]
+    public function world(): string { return "world"; }
+    public function notARoute(): string { return "nope"; }
+}
+');
+ClassLoader::clearCache();
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 
-$controllersDir = __DIR__ . '/../app/components';
-
 $loader = new ClassLoader();
-$loader->loadClasses($controllersDir);
+$loader->loadClasses(__DIR__ . '/../app/components');
 
 $routes   = ClassLoader::getRoutes();
 $services = ClassLoader::getServices();
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-// 1. Route table is not empty
+// 1. Route table is populated
 assert_true('Route table is populated', !empty($routes));
 
-// 2. Route table has UserController registered (class may or may not be in memory depending on cache)
+// 2. Fixture routes are registered correctly
 assert_true(
-    'UserController is registered in route table',
-    isset($routes['GET']['/user/list']) && $routes['GET']['/user/list']['class'] === 'UserController'
-);
-
-// 3. Routes are registered correctly
-assert_true(
-    'GET /user/list maps to UserController::index',
-    isset($routes['GET']['/user/list']) &&
-    $routes['GET']['/user/list']['class']  === 'UserController' &&
-    $routes['GET']['/user/list']['method'] === 'index'
+    'GET /scantest/hello maps to _ScanTestController::hello',
+    isset($routes['GET']['/scantest/hello']) &&
+    $routes['GET']['/scantest/hello']['class']  === '_ScanTestController' &&
+    $routes['GET']['/scantest/hello']['method'] === 'hello'
 );
 
 assert_true(
-    'GET /user/show/{id} maps to UserController::show',
-    isset($routes['GET']['/user/show/{id}']) &&
-    $routes['GET']['/user/show/{id}']['class']  === 'UserController' &&
-    $routes['GET']['/user/show/{id}']['method'] === 'show'
+    'POST /scantest/world maps to _ScanTestController::world',
+    isset($routes['POST']['/scantest/world']) &&
+    $routes['POST']['/scantest/world']['class']  === '_ScanTestController' &&
+    $routes['POST']['/scantest/world']['method'] === 'world'
 );
 
-// 4. helper() is not in the route table
+// 3. Non-route methods are not registered
 $allMethods = array_merge(...array_values($routes));
 assert_true(
-    'helper() is not registered as a route',
-    !in_array('helper', array_column($allMethods, 'method'))
+    'notARoute() is not registered',
+    !in_array('notARoute', array_column($allMethods, 'method'))
 );
 
-// 5. UserService is registered
+// 4. UserController is still registered (existing app controller)
 assert_true(
-    'UserService is registered',
-    isset($services['UserService'])
+    'UserController GET /user/list is registered',
+    isset($routes['GET']['/user/list']) &&
+    $routes['GET']['/user/list']['class'] === 'UserController'
 );
 
-// 6. Dispatch — only now load the class
-$match = $routes['GET']['/user/list'];
-new $match['class']();
+// 5. Service is registered
+assert_true(
+    'Fixture service is registered',
+    isset($services['_ScanTestService'])
+);
 
-assert_true(
-    'UserController is loaded after dispatch',
-    class_exists('UserController', false)
-);
-// TestController is in the route table but not instantiated until dispatched
-assert_true(
-    'TestController is registered in route table',
-    isset($routes['GET']) && in_array('TestController', array_column(array_merge(...array_values($routes)), 'class'))
-);
-assert_equals('index() route method name', 'index', $match['method']);
+// 6. Lazy loading — on a cache-hit request (normal production case), classes
+//    must NOT be loaded until the route is dispatched.
+//    Tested in a subprocess so we get a fresh PHP process with a warm cache.
+
+$lazyScript = __DIR__ . '/_lazy_check.php';
+file_put_contents($lazyScript, '<?php
+require_once "' . __DIR__ . '/../framework/attributes/Route.php";
+require_once "' . __DIR__ . '/../framework/attributes/Router.php";
+require_once "' . __DIR__ . '/../framework/attributes/Service.php";
+require_once "' . __DIR__ . '/../framework/core/ClassLoader.php";
+use PointStart\Core\ClassLoader;
+$loader = new ClassLoader();
+$loader->loadClasses("' . __DIR__ . '/../app/components");
+// Before dispatch: should NOT be loaded (cache read, no require fired)
+echo class_exists("_ScanTestController", false) ? "loaded" : "not_loaded";
+echo "|";
+// After dispatch: autoloader fires, class is loaded
+$routes = ClassLoader::getRoutes();
+$match  = $routes["GET"]["/scantest/hello"];
+new $match["class"]();
+echo class_exists("_ScanTestController", false) ? "loaded" : "not_loaded";
+');
+
+$output = shell_exec('php ' . escapeshellarg($lazyScript));
+[$beforeDispatch, $afterDispatch] = explode('|', trim($output));
+
+assert_equals('Class not loaded before dispatch (cache-hit)', 'not_loaded', $beforeDispatch);
+assert_equals('Class loaded after dispatch', 'loaded', $afterDispatch);
+
+unlink($lazyScript);
+
+// ─── Cleanup ─────────────────────────────────────────────────────────────────
+
+unlink($fixtureFile);
+ClassLoader::clearCache();

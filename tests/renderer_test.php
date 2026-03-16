@@ -10,12 +10,24 @@ require_once __DIR__ . '/../framework/core/Renderer.php';
 
 use PointStart\Core\Renderer;
 
+// ─── Fixture views — created dynamically, cleaned up at end ──────────────────
+
+$viewDir = VIEW_DIRECTORY;
+
+file_put_contents($viewDir . '_test_simple.php',
+    'This is a test <h1> H1 </h1>'
+);
+
+file_put_contents($viewDir . '_test_data.php',
+    '<h1><?= $title ?></h1><?php foreach ($items as $item): ?><li><?= $item ?></li><?php endforeach; ?>'
+);
+
 // ─── 1. Render a simple view ─────────────────────────────────────────────────
 
 echo "── render simple view ──\n";
 
-$html = Renderer::render('test');
-assert_true('Renders test.php without error', is_string($html));
+$html = Renderer::render('_test_simple');
+assert_true('Renders view without error', is_string($html));
 assert_true('Contains echo output', str_contains($html, 'This is a test'));
 assert_true('Contains raw HTML', str_contains($html, '<h1> H1 </h1>'));
 
@@ -23,7 +35,7 @@ assert_true('Contains raw HTML', str_contains($html, '<h1> H1 </h1>'));
 
 echo "\n── render with data ──\n";
 
-$html = Renderer::render('renderer_test_view', [
+$html = Renderer::render('_test_data', [
     'title' => 'Hello World',
     'items' => ['Apple', 'Banana', 'Cherry'],
 ]);
@@ -37,8 +49,8 @@ assert_true('Third item rendered', str_contains($html, '<li>Cherry</li>'));
 
 echo "\n── render same view twice ──\n";
 
-$first  = Renderer::render('test');
-$second = Renderer::render('test');
+$first  = Renderer::render('_test_simple');
+$second = Renderer::render('_test_simple');
 assert_equals('Second render produces same output', $first, $second);
 
 // ─── 4. View not found throws exception ─────────────────────────────────────
@@ -47,10 +59,10 @@ echo "\n── view not found ──\n";
 
 $threw = false;
 try {
-    Renderer::render('nonexistent_view_xyz');
+    Renderer::render('_nonexistent_view_xyz');
 } catch (\Exception $e) {
     $threw = true;
-    assert_true('Exception message mentions view name', str_contains($e->getMessage(), 'nonexistent_view_xyz'));
+    assert_true('Exception message mentions view name', str_contains($e->getMessage(), '_nonexistent_view_xyz'));
 }
 assert_true('Throws exception for missing view', $threw);
 
@@ -58,23 +70,22 @@ assert_true('Throws exception for missing view', $threw);
 
 echo "\n── empty data array ──\n";
 
-$html = Renderer::render('test', []);
+$html = Renderer::render('_test_simple', []);
 assert_true('Renders with empty data array', str_contains($html, 'This is a test'));
 
 // ─── 6. Data does not leak between renders ──────────────────────────────────
 
 echo "\n── data isolation ──\n";
 
-$html1 = Renderer::render('renderer_test_view', [
-    'title' => 'First',
-    'items' => ['A'],
-]);
-$html2 = Renderer::render('renderer_test_view', [
-    'title' => 'Second',
-    'items' => ['B'],
-]);
+$html1 = Renderer::render('_test_data', ['title' => 'First',  'items' => ['A']]);
+$html2 = Renderer::render('_test_data', ['title' => 'Second', 'items' => ['B']]);
 
 assert_true('First render has correct title', str_contains($html1, 'First'));
 assert_true('Second render has correct title', str_contains($html2, 'Second'));
 assert_true('First render does not contain second data', !str_contains($html1, 'Second'));
 assert_true('Second render does not contain first data', !str_contains($html2, 'First'));
+
+// ─── Cleanup ─────────────────────────────────────────────────────────────────
+
+unlink($viewDir . '_test_simple.php');
+unlink($viewDir . '_test_data.php');

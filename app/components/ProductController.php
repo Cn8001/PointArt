@@ -12,10 +12,6 @@ class ProductController {
     #[Wired]
     private ProductRepository $productRepository;
 
-    public function __construct() {
-        $this->productRepository = ProductRepository::make();
-    }
-
     // GET /product/list
     #[Route('/list', HttpMethod::GET)]
     public function index(): string {

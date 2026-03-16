@@ -17,6 +17,22 @@ require_once __DIR__ . '/../framework/core/RouteHandler.php';
 require_once __DIR__ . '/../framework/core/App.php';
 
 use PointStart\Core\App;
+use PointStart\Core\ClassLoader;
+
+// ─── Fixture — lightweight controller, no DB needed ──────────────────────────
+
+$fixtureFile = __DIR__ . '/../app/components/_PingController.php';
+file_put_contents($fixtureFile, '<?php
+use PointStart\Attributes\Router;
+use PointStart\Attributes\Route;
+use PointStart\Attributes\HttpMethod;
+#[Router(path: "/", name: "_ping")]
+class _PingController {
+    #[Route("/ping", HttpMethod::GET)]
+    public function ping(): string { return "pong"; }
+}
+');
+ClassLoader::clearCache();
 
 // ─── 1. App construction ────────────────────────────────────────────────────
 
@@ -47,7 +63,6 @@ assert_true('RouteHandler is correct type', $routeHandler instanceof \PointStart
 
 echo "\n── onRequest dispatch ──\n";
 
-// onRequest should not throw on unknown route (returns 404 via return404())
 ob_start();
 $app->onRequest('/nonexistent-route', 'GET');
 $output = ob_get_clean();
@@ -82,17 +97,22 @@ $instancesProp3->setAccessible(true);
 
 $app3->run();
 
-// After run(), no instances should be created yet
 $instancesBeforeDispatch = $instancesProp3->getValue($container3);
 assert_equals('No instances before dispatch', 0, count($instancesBeforeDispatch));
 
-// Dispatch to / — only TestController should be instantiated
+// Dispatch to /ping — only _PingController should be instantiated
 ob_start();
-$app3->onRequest('/', 'GET');
+$app3->onRequest('/ping', 'GET');
 ob_end_clean();
 
 $instancesAfterDispatch = $instancesProp3->getValue($container3);
-assert_true('TestController is instantiated after dispatch', isset($instancesAfterDispatch['TestController']));
-assert_true('UserController is NOT instantiated (not dispatched)', !isset($instancesAfterDispatch['UserController']));
-assert_true('UserService is NOT instantiated (not dispatched)', !isset($instancesAfterDispatch['UserService']));
 assert_equals('Only 1 instance created after single dispatch', 1, count($instancesAfterDispatch));
+
+$instantiatedClass = array_key_first($instancesAfterDispatch);
+assert_true('Dispatched controller is instantiated', $instantiatedClass === '_PingController');
+assert_true('Other controllers are NOT instantiated', !isset($instancesAfterDispatch['UserController']) && !isset($instancesAfterDispatch['ProductController']));
+
+// ─── Cleanup ─────────────────────────────────────────────────────────────────
+
+unlink($fixtureFile);
+ClassLoader::clearCache();
