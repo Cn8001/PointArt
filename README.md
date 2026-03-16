@@ -141,6 +141,10 @@ class UserController {
 | Query string (`$_GET`) | Typed parameter with a default value | `string $name = ''` for `?name=foo` |
 | POST body / file upload | `#[RequestParam]` on the parameter | `#[RequestParam] string $email` |
 
+### `#[RequestParam]`
+
+No parameters. Tells the framework to inject the value from `$_POST` or `$_FILES` for this method parameter. Without it, only path params and `$_GET` are injected.
+
 ### Return types
 
 | Return value | Response |
@@ -172,6 +176,18 @@ class MyService {
 }
 ```
 
+### `#[Wired]`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `required` | `bool` | No | When `true` (default), the dependency is eagerly resolved. When `false`, it is skipped if unavailable |
+
+### `#[Service]`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | `string` | No | Logical name for the service. Default: `''` |
+
 ---
 
 ## Models
@@ -189,10 +205,28 @@ class User extends Model {
     #[Column('name', 'varchar')]
     public string $name;
 
-    #[Column('email', 'varchar')]
-    public string $email;
+    #[Column('email', 'varchar', nullable: true)]
+    public ?string $email = null;
 }
 ```
+
+### `#[Entity]`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `tableName` | `string` | **Yes** | The database table this class maps to |
+
+### `#[Id]`
+
+No parameters. Marks the primary key property — must be `?int`, initialised to `null`. Set automatically after `save()`.
+
+### `#[Column]`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `columnName` | `string` | **Yes** | The database column name |
+| `type` | `string` | **Yes** | Column type hint (e.g. `'varchar'`, `'int'`, `'real'`) |
+| `nullable` | `bool` | No | Whether the column accepts `NULL`. Default: `false` |
 
 ### Static query methods
 
@@ -221,6 +255,14 @@ $user->delete();  // DELETE WHERE id = ?
 Place repository classes in `app/repositories/`.
 
 Extend `Repository` and set `$entityClass`. Declare the class `abstract` — a concrete implementation is generated at runtime.
+
+### `#[Query]`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `queryString` | `string` | **Yes** | Raw SQL to execute. Use `?` for positional parameters, bound in method signature order |
+
+Return type drives the result shape: `array` → mapped entity list, `int` → scalar fetch, `void` → execute only.
 
 ```php
 abstract class UserRepository extends Repository {
