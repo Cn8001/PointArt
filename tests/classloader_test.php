@@ -33,22 +33,22 @@ assert_true('Route table is populated', !empty($routes));
 // 2. Route table has UserController registered (class may or may not be in memory depending on cache)
 assert_true(
     'UserController is registered in route table',
-    isset($routes['GET']['/user/user-list']) && $routes['GET']['/user/user-list']['class'] === 'UserController'
+    isset($routes['GET']['/user/list']) && $routes['GET']['/user/list']['class'] === 'UserController'
 );
 
 // 3. Routes are registered correctly
 assert_true(
-    'GET /user/user-list maps to UserController::index',
-    isset($routes['GET']['/user/user-list']) &&
-    $routes['GET']['/user/user-list']['class']  === 'UserController' &&
-    $routes['GET']['/user/user-list']['method'] === 'index'
+    'GET /user/list maps to UserController::index',
+    isset($routes['GET']['/user/list']) &&
+    $routes['GET']['/user/list']['class']  === 'UserController' &&
+    $routes['GET']['/user/list']['method'] === 'index'
 );
 
 assert_true(
-    'GET /user/user-show/{id} maps to UserController::show',
-    isset($routes['GET']['/user/user-show/{id}']) &&
-    $routes['GET']['/user/user-show/{id}']['class']  === 'UserController' &&
-    $routes['GET']['/user/user-show/{id}']['method'] === 'show'
+    'GET /user/show/{id} maps to UserController::show',
+    isset($routes['GET']['/user/show/{id}']) &&
+    $routes['GET']['/user/show/{id}']['class']  === 'UserController' &&
+    $routes['GET']['/user/show/{id}']['method'] === 'show'
 );
 
 // 4. helper() is not in the route table
@@ -65,7 +65,7 @@ assert_true(
 );
 
 // 6. Dispatch — only now load the class
-$match = $routes['GET']['/user/user-list'];
+$match = $routes['GET']['/user/list'];
 new $match['class']();
 
 assert_true(

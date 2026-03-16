@@ -8,11 +8,16 @@ namespace PointStart\Attributes{
 
 use Attribute;
 
+    enum HttpMethod: string {
+        case GET     = 'GET';
+        case POST    = 'POST';
+    }
+
 #[Attribute(Attribute::TARGET_METHOD)]
     class Route{
         public function __construct(
             public string $path,
-            public string $httpMethod = 'GET'
+            public HttpMethod $httpMethod = HttpMethod::GET
         ) {}
     }
 

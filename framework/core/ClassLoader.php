@@ -11,6 +11,7 @@ namespace PointStart\Core{
     require_once __DIR__ . "/../attributes/Wired.php";
 
     use PointStart\Attributes\Service;
+    use PointStart\Attributes\HttpMethod;
     use ReflectionClass;
 
     class ClassLoader{
@@ -99,7 +100,7 @@ namespace PointStart\Core{
                     $instance = $attribute->newInstance();
                     if($instance instanceof \PointStart\Attributes\Route){
                         $fullPath = rtrim($prefix, '/') . '/' . ltrim($instance->path, '/');
-                        $this->register_route($instance->httpMethod, $fullPath, $reflection->getName(), $method->getName());
+                        $this->register_route($instance->httpMethod->value, $fullPath, $reflection->getName(), $method->getName());
                     }
                 }
             }

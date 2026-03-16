@@ -1,6 +1,7 @@
 <?php
 use PointStart\Attributes\Router;
 use PointStart\Attributes\Route;
+use PointStart\Attributes\HttpMethod;
 use PointStart\Attributes\RequestParam;
 use PointStart\Core\Renderer;
 use PointStart\Attributes\Wired;
@@ -11,14 +12,14 @@ class UserController {
     private UserRepository $userRepository;
 
     // GET /user/list
-    #[Route('/list', 'GET')]
+    #[Route('/list', HttpMethod::GET)]
     public function index(): string {
         $users = $this->userRepository->findAll();
         return Renderer::render('user.list', ['users' => $users]);
     }
 
     // GET /user/show/{id}
-    #[Route('/show/{id}', 'GET')]
+    #[Route('/show/{id}', HttpMethod::GET)]
     public function show(int $id): string {
         $user = User::find($id);
         if ($user === null) {
@@ -28,14 +29,14 @@ class UserController {
     }
 
     // GET /user/search?name=foo
-    #[Route('/search', 'GET')]
+    #[Route('/search', HttpMethod::GET)]
     public function search(string $name = ''): string {
         $users = $this->userRepository->findByName($name);
         return Renderer::render('user.list', ['users' => $users]);
     }
 
     // POST /user/create
-    #[Route('/create', 'POST')]
+    #[Route('/create', HttpMethod::POST)]
     public function create(
         #[RequestParam] string $name,
         #[RequestParam] string $email
@@ -48,7 +49,7 @@ class UserController {
     }
 
     // POST /user/update/{id}
-    #[Route('/update/{id}', 'POST')]
+    #[Route('/update/{id}', HttpMethod::POST)]
     public function update(
         int $id,
         #[RequestParam] string $name,
@@ -65,7 +66,7 @@ class UserController {
     }
 
     // POST /user/delete/{id}
-    #[Route('/delete/{id}', 'POST')]
+    #[Route('/delete/{id}', HttpMethod::POST)]
     public function delete(int $id): string {
         $this->userRepository->deleteById($id);
         $users = $this->userRepository->findAll();

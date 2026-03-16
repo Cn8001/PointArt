@@ -20,53 +20,54 @@ use PointStart\Core\Container;
 use PointStart\Core\ClassLoader;
 use PointStart\Attributes\Router;
 use PointStart\Attributes\Route;
+use PointStart\Attributes\HttpMethod;
 use PointStart\Attributes\RequestParam;
 
 // ─── Test Fixtures ───────────────────────────────────────────────────────────
 
 #[Router]
 class TestRouteController {
-    #[Route('/test-plain', 'GET')]
+    #[Route('/test-plain', HttpMethod::GET)]
     public function plainRoute(): string {
         return 'plain';
     }
 
-    #[Route('/users/{id}', 'GET')]
+    #[Route('/users/{id}', HttpMethod::GET)]
     public function showUser($id): string {
         return "user:$id";
     }
 
-    #[Route('/users/{id}/posts/{postId}', 'GET')]
+    #[Route('/users/{id}/posts/{postId}', HttpMethod::GET)]
     public function showUserPost($id, $postId): string {
         return "user:$id:post:$postId";
     }
 
-    #[Route('/search', 'GET')]
+    #[Route('/search', HttpMethod::GET)]
     public function search($q, $page = '1'): string {
         return "q:$q:page:$page";
     }
 
-    #[Route('/submit', 'POST')]
+    #[Route('/submit', HttpMethod::POST)]
     public function submit(#[RequestParam] $name, #[RequestParam] $email): string {
         return "name:$name:email:$email";
     }
 
-    #[Route('/upload', 'POST')]
+    #[Route('/upload', HttpMethod::POST)]
     public function upload(#[RequestParam] $file): string {
         return "file:" . ($file['name'] ?? 'none');
     }
 
-    #[Route('/mixed/{id}', 'POST')]
+    #[Route('/mixed/{id}', HttpMethod::POST)]
     public function mixed($id, $q, #[RequestParam] $name): string {
         return "id:$id:q:$q:name:$name";
     }
 
-    #[Route('/optional', 'GET')]
+    #[Route('/optional', HttpMethod::GET)]
     public function optional($missing = 'default'): string {
         return "val:$missing";
     }
 
-    #[Route('/no-annotation', 'GET')]
+    #[Route('/no-annotation', HttpMethod::GET)]
     public function noAnnotationParam($plain): string {
         return "plain:$plain";
     }
