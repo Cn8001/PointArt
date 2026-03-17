@@ -16,6 +16,12 @@ Views are plain `.php` files — no compilation, no build step, deploy by copyin
 
 ---
 
+## Documentation
+
+For full documentation and guides, visit [pointartframework.com](https://pointartframework.com).
+
+---
+
 ## Examples
 
 Working examples are included in `app/` — `UserController`, `ProductController`, their models, repositories, and views cover the full feature set and are a good starting point.
@@ -387,12 +393,6 @@ Unmatched routes return a 404 automatically. Uncaught exceptions return a 500 (o
 | `DB_PASSWORD` | — | Database password |
 | `DB_CHARSET` | `utf8mb4` | Charset (MySQL only) |
 | `DB_PATH` | — | Path to SQLite file (SQLite only) |
-
----
-
-## Documentation
-
-For full documentation and guides, visit [pointartframework.com](https://pointartframework.com).
 
 ---
 
