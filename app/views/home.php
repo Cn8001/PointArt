@@ -28,9 +28,9 @@
 
     <div class="links">
         <a href="https://pointartframework.com">Documentation</a>
-        <a href="https://pointartframework.com">Getting Started</a>
+        <a href="https://pointartframework.com/getting-started">Getting Started</a>
     </div>
-    <p>Welcome to PointStart, a simple PHP framework for building web applications. Below are example apps.</p>
+    <p>Welcome to PointArt, a simple PHP framework for building web applications. Below are example apps.</p>
     <div class="cards">
         <a href="/user/list" class="card">
             <h2>Users</h2>
