@@ -390,6 +390,12 @@ Unmatched routes return a 404 automatically. Uncaught exceptions return a 500 (o
 
 ---
 
+## Documentation
+
+For full documentation and guides, visit [pointartframework.com](https://pointartframework.com).
+
+---
+
 ## License
 
 PointArt is licensed under the [Mozilla Public License 2.0](https://mozilla.org/MPL/2.0/).

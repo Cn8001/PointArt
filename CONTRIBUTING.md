@@ -61,10 +61,11 @@ Allow a controller class to declare a default `Content-Type`. Currently the fram
 The Container currently treats all `#[Service]`-annotated classes as singletons. Introduce a way to declare a service as transient (a new instance per injection) — either via a parameter on `#[Service]` or a separate `#[Transient]` attribute.
 
 ### Query parameter passthrough
-`$_GET` parameters are not consistently injected into controller method parameters. It only reads path parameters or request body on #[RequestParam]
+`$_GET` parameters are not consistently injected into controller method parameters. It only reads path parameters or request bodyl on #[RequestParam]
 
 ### Model Database Migration
 A module or external php file can be used for migrating the model changes to database.
+
 ---
 
 
