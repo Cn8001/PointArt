@@ -62,7 +62,11 @@ The Container currently treats all `#[Service]`-annotated classes as singletons.
 
 ### Query parameter passthrough
 `$_GET` parameters are not consistently injected into controller method parameters. It only reads path parameters or request body on #[RequestParam]
+
+### Model Database Migration
+A module or external php file can be used for migrating the model changes to database.
 ---
+
 
 ## Reporting Bugs
 

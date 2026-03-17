@@ -16,6 +16,12 @@ Views are plain `.php` files — no compilation, no build step, deploy by copyin
 
 ---
 
+## Examples
+
+Working examples are included in `app/` — `UserController`, `ProductController`, their models, repositories, and views cover the full feature set and are a good starting point.
+
+---
+
 ## Getting Started
 
 ### 1. Clone and configure
@@ -53,6 +59,18 @@ ClassLoader::clearCache();
 ```
 
 Or delete `cache/registry.ser` manually. The cache will be rebuilt on the next request.
+
+---
+
+## Namespaces
+
+| Namespace | Contains |
+|-----------|----------|
+| `PointStart\Core` | `App`, `Container`, `ClassLoader`, `RouteHandler`, `Renderer`, `Env` |
+| `PointStart\ORM` | `Model`, `Repository` |
+| `PointStart\Attributes` | `Router`, `Route`, `Service`, `Wired`, `RequestParam`, `Entity`, `Column`, `Id`, `Query` |
+
+App-level classes (`UserController`, `User`, `UserRepository`, etc.) live in the global namespace — no `namespace` declaration needed in your controllers, models, or repositories.
 
 ---
 
