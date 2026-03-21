@@ -1,9 +1,7 @@
+--TEST--
+RouteHandler URL parsing, parameter matching, and method invocation
+--FILE--
 <?php
-/**
- * RouteHandler Tests — URL parsing, parameter matching, method invocation
- * Run: php tests/routehandler_test.php
- */
-
 require_once __DIR__ . '/test_helpers.php';
 require_once __DIR__ . '/../framework/attributes/Route.php';
 require_once __DIR__ . '/../framework/attributes/Router.php';
@@ -208,3 +206,36 @@ $method = new ReflectionMethod(TestRouteController::class, 'showUser');
 $result = $invokeMethod->invoke($handler, $method, $instance, ['id' => 'from_path']);
 assert_equals('Path param takes priority over $_GET', 'user:from_path', $result);
 $_GET = [];
+--EXPECT--
+── parseUrl ──
+[PASS] parseUrl splits path segments
+[PASS] parseUrl single segment with query
+
+── matchParameterNamesWithValues ──
+[PASS] Matches {id} to 123
+[PASS] Matches multiple path params
+[PASS] No placeholders returns empty
+
+── invokeMethodWithParameters (path params) ──
+[PASS] Injects path param $id
+[PASS] Injects multiple path params
+
+── invokeMethodWithParameters (query params) ──
+[PASS] Injects $_GET params
+[PASS] Uses default when $_GET param missing
+
+── invokeMethodWithParameters (#[RequestParam] POST) ──
+[PASS] Injects $_POST with #[RequestParam]
+[PASS] $_POST ignored without #[RequestParam]
+
+── invokeMethodWithParameters (#[RequestParam] FILES) ──
+[PASS] Injects $_FILES with #[RequestParam]
+
+── invokeMethodWithParameters (mixed sources) ──
+[PASS] Mixes path + query + POST params
+
+── invokeMethodWithParameters (defaults) ──
+[PASS] Uses default value when no source matches
+
+── invokeMethodWithParameters (priority) ──
+[PASS] Path param takes priority over $_GET

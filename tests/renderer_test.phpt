@@ -1,9 +1,7 @@
+--TEST--
+Renderer view rendering, data extraction, and error handling
+--FILE--
 <?php
-/**
- * Renderer Tests — view rendering, data extraction, error handling
- * Run: php tests/renderer_test.php
- */
-
 require_once __DIR__ . '/test_helpers.php';
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../framework/core/Renderer.php';
@@ -89,3 +87,30 @@ assert_true('Second render does not contain first data', !str_contains($html2, '
 
 unlink($viewDir . '_test_simple.php');
 unlink($viewDir . '_test_data.php');
+--EXPECT--
+── render simple view ──
+[PASS] Renders view without error
+[PASS] Contains echo output
+[PASS] Contains raw HTML
+
+── render with data ──
+[PASS] Title is rendered
+[PASS] First item rendered
+[PASS] Second item rendered
+[PASS] Third item rendered
+
+── render same view twice ──
+[PASS] Second render produces same output
+
+── view not found ──
+[PASS] Exception message mentions view name
+[PASS] Throws exception for missing view
+
+── empty data array ──
+[PASS] Renders with empty data array
+
+── data isolation ──
+[PASS] First render has correct title
+[PASS] Second render has correct title
+[PASS] First render does not contain second data
+[PASS] Second render does not contain first data

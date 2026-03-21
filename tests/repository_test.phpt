@@ -1,10 +1,7 @@
+--TEST--
+Repository dynamic __call dispatch
+--FILE--
 <?php
-/**
- * Repository Tests — dynamic __call dispatch
- * Run standalone: php tests/repository_test.php
- * Or via:        php tests/TestSuite.php
- */
-
 require_once __DIR__ . '/../framework/attributes/Entity.php';
 require_once __DIR__ . '/../framework/attributes/Column.php';
 require_once __DIR__ . '/../framework/attributes/Id.php';
@@ -179,3 +176,53 @@ assert_equals('deleteByStatus removes records', 2, count($remaining));
 
 $allActive = $repo->findByStatus('active');
 assert_equals('all remaining are active', 2, count($allActive));
+--EXPECT--
+── built-in delegates ──
+[PASS] findAll returns 4
+[PASS] find returns instance
+[PASS] find by id name
+[PASS] save assigns id
+[PASS] delete removes record
+[PASS] deleteById removes record
+[PASS] 3 records remain after deleteById
+
+── findByName ──
+[PASS] findByName count
+[PASS] findByName name
+
+── findByNameAndEmail ──
+[PASS] findByNameAndEmail count
+[PASS] findByNameAndEmail no match
+
+── findByAgeGreaterThan ──
+[PASS] findByAgeGreaterThan count
+
+── findByAgeLessThan ──
+[PASS] findByAgeLessThan count
+
+── findByAgeGreaterThanEqual ──
+[PASS] findByAgeGreaterThanEqual count
+
+── findByStatusNot ──
+[PASS] findByStatusNot count
+
+── findByNameLike ──
+[PASS] findByNameLike count
+[PASS] findByNameLike name
+
+── findOneByEmail ──
+[PASS] findOneByEmail returns instance
+[PASS] findOneByEmail name
+[PASS] findOneByEmail no match returns null
+
+── countByStatus ──
+[PASS] countByStatus active
+[PASS] countByStatus inactive
+
+── existsByEmail ──
+[PASS] existsByEmail true
+[PASS] existsByEmail false
+
+── deleteByStatus ──
+[PASS] deleteByStatus removes records
+[PASS] all remaining are active

@@ -1,9 +1,7 @@
+--TEST--
+Container dependency resolution, instance creation, and injection
+--FILE--
 <?php
-/**
- * Container Tests — dependency resolution, instance creation, injection
- * Run: php tests/container_test.php
- */
-
 require_once __DIR__ . '/../framework/attributes/Route.php';
 require_once __DIR__ . '/../framework/attributes/Router.php';
 require_once __DIR__ . '/../framework/attributes/Service.php';
@@ -224,4 +222,51 @@ assert_equals('Batch creates 3 instances', 3, count($instances));
 assert_true('NoDeps in batch', $instances['NoDeps'] instanceof NoDeps);
 assert_true('Logger in batch', $instances['Logger'] instanceof Logger);
 assert_true('Repository in batch', $instances['Repository'] instanceof Repository);
+--EXPECT--
+── resolve_dependencies ──
+[PASS] Logger has no dependencies
+[PASS] NoDeps has no wired dependencies
+[PASS] Repository has 1 dependency
+[PASS] Repository depends on Logger (property)
+[PASS] Repository depends on Logger (type)
+[PASS] Repository dependency is required
+[PASS] AppService has 2 dependencies
+[PASS] AppService depends on Repository
+[PASS] AppService depends on Logger
+[PASS] OptionalDeps has 2 wired properties
+[PASS] OptionalDeps Logger is not required
+[PASS] OptionalDeps Repository is required
 
+── generateInstances (no deps) ──
+[PASS] Logger instance created
+[PASS] Logger is correct type
+
+── generateInstances (single dep) ──
+[PASS] Repository instance created
+[PASS] Repository is correct type
+[PASS] Logger created as sub-dependency
+[PASS] Logger sub-dep is correct type
+[PASS] Repository.logger is injected
+[PASS] Repository.logger is the same instance from container
+
+── generateInstances (chained deps) ──
+[PASS] AppService instance created
+[PASS] Repository created for AppService
+[PASS] Logger created for Repository chain
+[PASS] AppService.repository is injected
+[PASS] AppService.logger is injected
+[PASS] AppService.repository.logger is injected (nested)
+[PASS] Logger is shared across AppService and Repository
+
+── generateInstances (no duplicates) ──
+[PASS] Same Logger instance on second call (not recreated)
+
+── generateInstances (optional deps) ──
+[PASS] OptionalDeps instance created
+[PASS] Repository created (required dep)
+
+── generateInstances (batch) ──
+[PASS] Batch creates 3 instances
+[PASS] NoDeps in batch
+[PASS] Logger in batch
+[PASS] Repository in batch

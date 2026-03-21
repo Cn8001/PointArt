@@ -1,9 +1,7 @@
+--TEST--
+App bootstrap, wiring, and request dispatch
+--FILE--
 <?php
-/**
- * App Tests — bootstrap, wiring, request dispatch
- * Run: php tests/app_test.php
- */
-
 require_once __DIR__ . '/test_helpers.php';
 require_once __DIR__ . '/../framework/attributes/Route.php';
 require_once __DIR__ . '/../framework/attributes/Router.php';
@@ -116,3 +114,23 @@ assert_true('Other controllers are NOT instantiated', !isset($instancesAfterDisp
 
 unlink($fixtureFile);
 ClassLoader::clearCache();
+--EXPECT--
+── App construction ──
+[PASS] Container is created
+[PASS] Container is correct type
+[PASS] ClassLoader is created
+[PASS] ClassLoader is correct type
+[PASS] RouteHandler is created
+[PASS] RouteHandler is correct type
+
+── onRequest dispatch ──
+[PASS] Unknown route returns 404 output
+
+── run() ──
+[PASS] run() executes without error
+
+── Lazy instantiation ──
+[PASS] No instances before dispatch
+[PASS] Only 1 instance created after single dispatch
+[PASS] Dispatched controller is instantiated
+[PASS] Other controllers are NOT instantiated

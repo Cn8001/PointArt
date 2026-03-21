@@ -1,9 +1,7 @@
+--TEST--
+ClassLoader route scanning, service registration, and lazy loading
+--FILE--
 <?php
-/**
- * ClassLoader Tests — route scanning, service registration, lazy loading
- * Run: php tests/classloader_test.php
- */
-
 require_once __DIR__ . '/../framework/attributes/Route.php';
 require_once __DIR__ . '/../framework/attributes/Router.php';
 require_once __DIR__ . '/../framework/attributes/Service.php';
@@ -116,3 +114,12 @@ unlink($lazyScript);
 
 unlink($fixtureFile);
 ClassLoader::clearCache();
+--EXPECT--
+[PASS] Route table is populated
+[PASS] GET /scantest/hello maps to _ScanTestController::hello
+[PASS] POST /scantest/world maps to _ScanTestController::world
+[PASS] notARoute() is not registered
+[PASS] UserController GET /user/list is registered
+[PASS] Fixture service is registered
+[PASS] Class not loaded before dispatch (cache-hit)
+[PASS] Class loaded after dispatch

@@ -66,6 +66,9 @@ The Container currently treats all `#[Service]`-annotated classes as singletons.
 ### Model Database Migration
 A module or external php file can be used for migrating the model changes to database.
 
+### Optional Composer Support
+Totally optional composer support for people who want to include external packages.
+
 ---
 
 

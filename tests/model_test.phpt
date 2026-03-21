@@ -1,10 +1,7 @@
+--TEST--
+Model CRUD, reflection helpers, and hydration
+--FILE--
 <?php
-/**
- * Model Tests — CRUD, reflection helpers, hydration
- * Run standalone: php tests/model_test.php
- * Or via:        php tests/TestSuite.php
- */
-
 require_once __DIR__ . '/../framework/attributes/Entity.php';
 require_once __DIR__ . '/../framework/attributes/Column.php';
 require_once __DIR__ . '/../framework/attributes/Id.php';
@@ -148,3 +145,46 @@ assert_equals('deleted record returns null', null, $afterDelete);
 
 $remaining = ModelTestUser::findAll();
 assert_equals('one record remains', 1, count($remaining));
+--EXPECT--
+── reflection helpers ──
+[PASS] getTableName()
+[PASS] getColumns() has 3 entries
+[PASS] id maps to id
+[PASS] name maps to name
+[PASS] email maps to email
+[PASS] getPrimaryKey()
+
+── save (insert) ──
+[PASS] id assigned after insert
+[PASS] id is 1
+
+── find ──
+[PASS] find returns instance
+[PASS] find name
+[PASS] find email
+[PASS] find missing returns null
+
+── findAll ──
+[PASS] findAll returns 2 rows
+[PASS] findAll items are ModelTestUser
+
+── findBy ──
+[PASS] findBy name count
+[PASS] findBy name value
+[PASS] findBy no match returns empty
+[PASS] findBy order by name[0]
+[PASS] findBy order by name[1]
+[PASS] findBy limit 1
+
+── findOne ──
+[PASS] findOne returns instance
+[PASS] findOne name
+[PASS] findOne no match returns null
+
+── save (update) ──
+[PASS] update persisted
+[PASS] email unchanged after update
+
+── delete ──
+[PASS] deleted record returns null
+[PASS] one record remains

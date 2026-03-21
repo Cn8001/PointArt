@@ -1,11 +1,9 @@
+--TEST--
+ProductController GET and POST request simulation
+--FILE--
 <?php
-/**
- * ProductController Tests — GET and POST request simulation
- * Run standalone: php tests/product_controller_test.php
- * Or via:        php tests/TestSuite.php
- */
-
 require_once __DIR__ . '/test_helpers.php';
+require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../framework/attributes/Entity.php';
 require_once __DIR__ . '/../framework/attributes/Column.php';
 require_once __DIR__ . '/../framework/attributes/Id.php';
@@ -170,3 +168,47 @@ assert_equals('product gone from DB', null, $deleted);
 
 $remaining = Product::findAll();
 assert_equals('2 products remain', 2, count($remaining));
+--EXPECT--
+── POST /product/create ──
+[PASS] create renders product name
+[PASS] create renders price
+[PASS] 3 products in DB
+
+── GET /product/list ──
+[PASS] list renders Widget
+[PASS] list renders Gadget
+[PASS] list has add form
+
+── GET /product/show/{id} ──
+[PASS] show renders product name
+[PASS] show has update form
+[PASS] show missing renders not found
+
+── GET /product/search ──
+[PASS] search renders Widget
+[PASS] search excludes Gadget
+
+── GET /product/affordable (#[Query]) ──
+[PASS] findAffordable returns 2 products
+[PASS] Widget is affordable
+[PASS] Gadget is affordable
+[PASS] affordable renders Widget
+[PASS] affordable excludes Doohickey
+
+── GET /product/low-stock (__call) ──
+[PASS] findByStockLessThan returns 1 product
+[PASS] Doohickey has 0 stock
+[PASS] low-stock renders Doohickey
+
+── POST /product/update/{id} ──
+[PASS] update renders updated price
+[PASS] price updated in DB
+[PASS] stock updated in DB
+[PASS] name unchanged
+[PASS] update missing renders not found
+
+── POST /product/delete/{id} ──
+[PASS] delete renders remaining list
+[PASS] deleted product gone from list
+[PASS] product gone from DB
+[PASS] 2 products remain
