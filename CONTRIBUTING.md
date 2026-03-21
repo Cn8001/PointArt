@@ -69,6 +69,9 @@ A module or external php file can be used for migrating the model changes to dat
 ### Optional Composer Support
 Totally optional composer support for people who want to include external packages.
 
+### Auto-updater
+Auto framework updater and update checker.
+
 ---
 
 
