@@ -99,8 +99,14 @@ App-level classes (`UserController`, `User`, `UserRepository`, etc.) live in the
     ├── components/        # Controllers and Services (auto-scanned)
     ├── models/            # Model subclasses
     ├── repositories/      # Repository subclasses
-    └── views/             # Plain .php view files
+    ├── views/             # Plain .php view files
+    └── public/            # Static assets served directly (CSS, JS, images)
+        ├── css/
+        └── js/
 ```
+
+> **All public files (CSS, JS, images, fonts) must go inside `app/public/`.**
+> The `.htaccess` blocks direct access to everything else under `app/` — files placed outside `app/public/` will return 403.
 
 ---
 

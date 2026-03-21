@@ -1,3 +1,9 @@
 RewriteEngine On
+
+# Block direct access to sensitive directories
+RewriteRule ^(app/(?!public/)|framework/|tests/|cache/|config\.php|\.env|migrate\.php|seed\.php) - [F,L]
+
 RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]
