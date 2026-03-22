@@ -10,6 +10,7 @@ namespace PointStart\Core{
     require_once __DIR__ . "/Container.php";
     require_once __DIR__ . "/ClassLoader.php";
     require_once __DIR__ . "/HttpResponses.php";
+    require_once __DIR__ . "/Csrf.php";
     require_once __DIR__ . "/../attributes/Route.php";
     require_once __DIR__ . "/../attributes/RequestParam.php";
 
@@ -22,7 +23,8 @@ namespace PointStart\Core{
         // Route requests and invoke controller methods with parameters via route table from ClassLoader
        public function __construct(
             protected Container $container,
-            protected ClassLoader $classLoader
+            protected ClassLoader $classLoader,
+            protected array $config = []
         ){
         }
 
@@ -62,6 +64,20 @@ namespace PointStart\Core{
 
             $controllerClass = $destination['class'];
             $method = $destination['method'];
+
+            // CSRF validation — only enforced when a session token exists.
+            // Requests without an established session token (API clients, curl, etc.) pass through.
+            if(($this->config['csrf']['enabled'] ?? true)
+                && $requestMethod === 'POST'
+                && !($destination['csrfExempt'] ?? false)
+                && !str_starts_with($_SERVER['CONTENT_TYPE'] ?? '', 'application/json')
+                && !empty($_SESSION['_csrf_token'] ?? null)
+            ){
+                if(!Csrf::validate()){
+                    httpError(403);
+                    return;
+                }
+            }
 
             $classInstance = $this->container->getInstance($controllerClass);
             if(!isset($classInstance)){

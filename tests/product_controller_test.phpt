@@ -48,7 +48,7 @@ $loader = new ClassLoader();
 $loader->loadClasses(__DIR__ . '/../app/components');
 
 $container   = new Container();
-$routeHandler = new RouteHandler($container, $loader);
+$routeHandler = new RouteHandler($container, $loader, ['csrf' => ['enabled' => false]]);
 
 // Helper: simulate a request, return output
 function dispatch(RouteHandler $rh, string $uri, string $method): string {

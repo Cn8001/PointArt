@@ -100,17 +100,18 @@ namespace PointStart\Core{
                     $instance = $attribute->newInstance();
                     if($instance instanceof \PointStart\Attributes\Route){
                         $fullPath = rtrim($prefix, '/') . '/' . ltrim($instance->path, '/');
-                        $this->register_route($instance->httpMethod->value, $fullPath, $reflection->getName(), $method->getName());
+                        $this->register_route($instance->httpMethod->value, $fullPath, $reflection->getName(), $method->getName(), $instance->csrfExempt);
                     }
                 }
             }
         }
 
         // Register single route
-        private function register_route($httpMethod, $path, $class, $methodName){
+        private function register_route($httpMethod, $path, $class, $methodName, bool $csrfExempt = false){
             self::$routes[$httpMethod][$path] = [
-                    "class" => $class,
-                    "method" => $methodName
+                    "class"      => $class,
+                    "method"     => $methodName,
+                    "csrfExempt" => $csrfExempt,
             ];
         }
 

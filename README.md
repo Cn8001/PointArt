@@ -162,6 +162,7 @@ class UserController {
 |-----------|------|----------|-------------|
 | `path` | `string` | **Yes** | Route path, relative to the controller prefix. Supports `{param}` placeholders |
 | `method` | `HttpMethod` | No | `HttpMethod::GET` or `HttpMethod::POST`. Default: `GET` |
+| `csrfExempt` | `bool` | No | Skip CSRF validation for this route (e.g. webhooks, public APIs). Default: `false` |
 
 ### Method parameters
 
@@ -372,6 +373,61 @@ return Renderer::render('user.notfound');
 
 ---
 
+## Security
+
+### CORS
+
+CORS headers are disabled by default (opt-in for backend development). Configure entirely via `.env`:
+
+```ini
+CORS_ENABLED=true
+CORS_ALLOWED_ORIGINS=*
+CORS_ALLOWED_METHODS=GET,POST,OPTIONS
+CORS_ALLOWED_HEADERS=Content-Type,Authorization,X-Requested-With
+CORS_ALLOW_CREDENTIALS=false
+CORS_MAX_AGE=86400
+```
+
+When enabled, CORS headers are set on every response. `OPTIONS` preflight requests are intercepted by the framework and return `204` — no controller is involved.
+
+### CSRF
+
+CSRF protection is **enabled by default** for all `POST` requests made from HTML forms. JSON API requests (`Content-Type: application/json`) bypass the check automatically.
+
+**In forms** — use `csrf_field()` to output a hidden token input:
+
+```php
+<form method="POST" action="/user/create">
+    <?= csrf_field() ?>
+    ...
+</form>
+```
+
+Or retrieve the raw token with `csrf_token()` for AJAX requests:
+
+```php
+fetch('/api/data', {
+    headers: { 'X-CSRF-Token': '<?= csrf_token() ?>' }
+});
+```
+
+**Exempting a route** — set `csrfExempt: true` on the `#[Route]` attribute:
+
+```php
+#[Route('/webhook', HttpMethod::POST, csrfExempt: true)]
+public function webhook(): array { ... }
+```
+
+CSRF can be disabled globally via `.env`:
+
+```ini
+CSRF_ENABLED=false
+```
+
+A POST without a valid token returns `403 Forbidden`.
+
+---
+
 ## Error Handling
 
 ```php
@@ -399,6 +455,13 @@ Unmatched routes return a 404 automatically. Uncaught exceptions return a 500 (o
 | `DB_PASSWORD` | — | Database password |
 | `DB_CHARSET` | `utf8mb4` | Charset (MySQL only) |
 | `DB_PATH` | — | Path to SQLite file (SQLite only) |
+| `CORS_ENABLED` | `false` | Enable CORS headers |
+| `CORS_ALLOWED_ORIGINS` | `*` | Comma-separated list of allowed origins, or `*` |
+| `CORS_ALLOWED_METHODS` | `GET,POST,OPTIONS` | Comma-separated allowed methods |
+| `CORS_ALLOWED_HEADERS` | `Content-Type,Authorization,X-Requested-With` | Comma-separated allowed headers |
+| `CORS_ALLOW_CREDENTIALS` | `false` | Allow credentials (cookies, auth headers) |
+| `CORS_MAX_AGE` | `86400` | Preflight cache duration in seconds |
+| `CSRF_ENABLED` | `true` | Enable CSRF token validation for POST form requests |
 
 ---
 

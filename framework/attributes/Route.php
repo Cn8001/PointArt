@@ -17,7 +17,8 @@ use Attribute;
     class Route{
         public function __construct(
             public string $path,
-            public HttpMethod $httpMethod = HttpMethod::GET
+            public HttpMethod $httpMethod = HttpMethod::GET,
+            public bool $csrfExempt = false
         ) {}
     }
 

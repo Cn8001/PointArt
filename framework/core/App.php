@@ -9,6 +9,8 @@ namespace PointStart\Core{
     require_once __DIR__ . "/../../config.php";
     require_once __DIR__ . "/Container.php";
     require_once __DIR__ . "/ClassLoader.php";
+    require_once __DIR__ . "/Cors.php";
+    require_once __DIR__ . "/Csrf.php";
     require_once __DIR__ . "/RouteHandler.php";
     require_once __DIR__ . "/Renderer.php";
     require_once __DIR__ . "/../ORM/Model.php";
@@ -19,11 +21,12 @@ namespace PointStart\Core{
         private RouteHandler $routeHandler;
         private ClassLoader $classLoader;
         private bool $debug;
+        private array $config;
 
         public function __construct(){
             Env::load(__DIR__ . '/../../.env');
-            $config = require __DIR__ . '/../../config.php';
-            $this->debug = $config['app']['debug'] ?? false;
+            $this->config = require __DIR__ . '/../../config.php';
+            $this->debug = $this->config['app']['debug'] ?? false;
 
             set_exception_handler(function(\Throwable $e){
                 $this->handleError($e);
@@ -31,7 +34,7 @@ namespace PointStart\Core{
 
             $this->container = new Container();
             $this->classLoader = new ClassLoader();
-            $this->routeHandler = new RouteHandler($this->container,$this->classLoader);
+            $this->routeHandler = new RouteHandler($this->container, $this->classLoader, $this->config);
         }
 
         public function run(){
@@ -39,6 +42,12 @@ namespace PointStart\Core{
         }
 
         public function onRequest($requestUri, $requestMethod){
+            Cors::apply($this->config);
+            if(Cors::isPreflightRequest()){
+                http_response_code(204);
+                return;
+            }
+
             $returnValue = $this->routeHandler->dispatch($requestUri, $requestMethod);
             if(isset($returnValue)){
                 if(is_array($returnValue) || is_object($returnValue)){
