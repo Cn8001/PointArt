@@ -69,6 +69,12 @@ A module or external php file can be used for migrating the model changes to dat
 ### Optional Composer Support
 Totally optional composer support for people who want to include external packages.
 
+### OpenAPI / Swagger
+Automatically generate an OpenAPI 3.0 spec from the existing attribute metadata — `#[Router]`, `#[Route]`, `#[RequestParam]`, method parameter types, and `#[Entity]`/`#[Column]` for schema definitions. Expose it as `GET /pointart/openapi.json` and serve a Swagger UI page at `GET /pointart/docs` (self-contained HTML, same pattern as the updater). A `#[Returns(SomeClass::class)]` attribute or similar mechanism will be needed to describe response schemas since PHP return types alone are insufficient.
+
+### App Deployer
+Extend the updater concept to application code. Allow users to connect their own GitHub repository and deploy `app/` from a release or branch — useful on shared hosting where `git pull` is not available. Should support the same secret-based auth, backup-before-overwrite, and protected paths model as the framework updater.
+
 ---
 
 
