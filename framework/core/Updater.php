@@ -8,7 +8,6 @@ namespace PointStart\Core;
 
 class Updater {
     private const GITHUB_API = 'https://api.github.com/repos/Cn8001/PointArt/releases';
-    private const ALLOWED_TAGS = ['stable', 'patch'];
     private const VERSION_FILE = __DIR__ . '/../VERSION';
 
     private string $secret;
@@ -121,27 +120,28 @@ class Updater {
         $releases = json_decode($json, true);
         if (!is_array($releases)) return ['error' => 'Unexpected response from GitHub API.'];
 
-        $allowedTags = $channel === 'dev' ? ['dev'] : self::ALLOWED_TAGS;
-
         foreach ($releases as $data) {
             if (!is_array($data)) continue;
 
-            $tag = strtolower(trim($data['tag_name'] ?? ''));
-            if (!in_array($tag, $allowedTags, true)) continue;
+            $isPrerelease = !empty($data['prerelease']);
 
-            $name = $data['name'] ?? '';
-            if (preg_match('/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?/', $name, $m) !== 1) continue;
+            // Stable channel: skip prereleases. Dev channel: only prereleases.
+            if ($channel === 'stable' && $isPrerelease) continue;
+            if ($channel === 'dev' && !$isPrerelease) continue;
+
+            $tagName = $data['tag_name'] ?? '';
+            if (preg_match('/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?/', $tagName, $m) !== 1) continue;
 
             return [
                 'version'  => $m[0],
-                'tag'      => $tag,
+                'tag'      => $isPrerelease ? 'dev' : 'stable',
                 'notes'    => $data['body'] ?? '',
                 'zip_url'  => $data['zipball_url'] ?? '',
                 'date'     => $data['published_at'] ?? '',
             ];
         }
 
-        $label = $channel === 'dev' ? 'dev' : 'stable/patch';
+        $label = $channel === 'dev' ? 'dev' : 'stable';
         return ['error' => 'No ' . $label . ' release found.'];
     }
 
