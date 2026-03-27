@@ -218,9 +218,12 @@ class Updater {
             ];
         }
 
+        // Success — remove backup since it's no longer needed
+        $this->removeDirectory($backupDir);
+
         return [
             'success' => true,
-            'message' => 'Updated to v' . $release['version'] . '. Backup saved to cache/update-backup-' . $release['version'] . '/',
+            'message' => 'Updated to v' . $release['version'] . '.',
         ];
     }
 
