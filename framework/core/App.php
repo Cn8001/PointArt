@@ -13,6 +13,7 @@ namespace PointStart\Core{
     require_once __DIR__ . "/Csrf.php";
     require_once __DIR__ . "/RouteHandler.php";
     require_once __DIR__ . "/Renderer.php";
+    require_once __DIR__ . "/Updater.php";
     require_once __DIR__ . "/../ORM/Model.php";
     require_once __DIR__ . "/../ORM/Repository.php";
 
@@ -48,6 +49,12 @@ namespace PointStart\Core{
                 return;
             }
 
+            // Built-in updater route — handled before user routes
+            $path = strtok($requestUri, '?');
+            if($this->handleUpdaterRoute($path, $requestMethod)){
+                return;
+            }
+
             $returnValue = $this->routeHandler->dispatch($requestUri, $requestMethod);
             if(isset($returnValue)){
                 if(is_array($returnValue) || is_object($returnValue)){
@@ -57,6 +64,31 @@ namespace PointStart\Core{
                     echo $returnValue;
                 }
             }
+        }
+
+        private function handleUpdaterRoute(string $path, string $method): bool {
+            if(!str_starts_with($path, '/pointart/update')) return false;
+
+            $enabled = filter_var($this->config['updater']['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            if(!$enabled) return false;
+
+            $secret = $this->config['updater']['secret'] ?? '';
+            $updater = new Updater($secret);
+
+            if($path === '/pointart/update' && $method === 'GET'){
+                $updater->handleLoginForm();
+                return true;
+            }
+            if($path === '/pointart/update' && $method === 'POST'){
+                $updater->handleLogin();
+                return true;
+            }
+            if($path === '/pointart/update/run' && $method === 'POST'){
+                $updater->handleRunUpdate();
+                return true;
+            }
+
+            return false;
         }
 
         private function handleError(\Throwable $e): void {

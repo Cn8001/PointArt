@@ -428,6 +428,44 @@ A POST without a valid token returns `403 Forbidden`.
 
 ---
 
+## Updater
+
+PointArt includes a built-in self-updater that pulls new framework versions from GitHub Releases — no CLI or SSH required.
+
+### Setup
+
+Enable the updater in `.env` and set a secret:
+
+```ini
+UPDATER_ENABLED=true
+UPDATER_SECRET=your-secret-here
+```
+
+### Usage
+
+1. Visit `/pointart/update` in your browser
+2. Enter your updater secret
+3. Review the current and latest versions, plus release notes
+4. Click **Update Now** to apply the update
+
+The updater will:
+- Back up all overwritten files to `cache/update-backup-{version}/`
+- Replace framework files (`framework/`, `index.php`, `.htaccess`, `config.php`, etc.)
+- Clear the route cache automatically
+
+**Never touched:** `app/`, `.env`, `*.sqlite` — your code, config, and data are safe.
+
+### Configuration
+
+| `.env` key | Default | Description |
+|------------|---------|-------------|
+| `UPDATER_ENABLED` | `false` | Enable the updater route |
+| `UPDATER_SECRET` | — | Secret required to access the updater |
+
+> **Tip:** Disable the updater after updating (`UPDATER_ENABLED=false`) to reduce your attack surface.
+
+---
+
 ## Error Handling
 
 ```php
@@ -462,6 +500,8 @@ Unmatched routes return a 404 automatically. Uncaught exceptions return a 500 (o
 | `CORS_ALLOW_CREDENTIALS` | `false` | Allow credentials (cookies, auth headers) |
 | `CORS_MAX_AGE` | `86400` | Preflight cache duration in seconds |
 | `CSRF_ENABLED` | `true` | Enable CSRF token validation for POST form requests |
+| `UPDATER_ENABLED` | `false` | Enable the built-in framework updater route |
+| `UPDATER_SECRET` | — | Secret key required to access the updater |
 
 ---
 

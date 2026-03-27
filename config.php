@@ -34,5 +34,9 @@ return [
     'csrf' => [
         'enabled' => filter_var($_ENV['CSRF_ENABLED'] ?? true, FILTER_VALIDATE_BOOLEAN),
     ],
+    'updater' => [
+        'enabled' => filter_var($_ENV['UPDATER_ENABLED'] ?? false, FILTER_VALIDATE_BOOLEAN),
+        'secret'  => $_ENV['UPDATER_SECRET'] ?? '',
+    ],
 ];
 ?>
