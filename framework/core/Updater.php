@@ -7,7 +7,8 @@
 namespace PointStart\Core;
 
 class Updater {
-    private const GITHUB_API = 'https://api.github.com/repos/Cn8001/PointArt/releases/latest';
+    private const GITHUB_API = 'https://api.github.com/repos/Cn8001/PointArt/releases';
+    private const ALLOWED_TAGS = ['stable', 'patch'];
     private const VERSION_FILE = __DIR__ . '/../VERSION';
 
     private string $secret;
@@ -54,8 +55,9 @@ class Updater {
             exit;
         }
 
+        $channel = $this->resolveChannel($_POST['channel'] ?? 'stable');
         $current = $this->getCurrentVersion();
-        $latest  = $this->fetchLatestRelease();
+        $latest  = $this->fetchLatestRelease($channel);
 
         if (isset($latest['error'])) {
             echo $this->renderErrorPage($latest['error']);
@@ -72,15 +74,20 @@ class Updater {
     }
 
     private function showCheckPage(): void {
+        $channel = $this->resolveChannel($_GET['channel'] ?? 'stable');
         $current = $this->getCurrentVersion();
-        $latest  = $this->fetchLatestRelease();
+        $latest  = $this->fetchLatestRelease($channel);
 
         if (isset($latest['error'])) {
             echo $this->renderErrorPage($latest['error']);
             return;
         }
 
-        echo $this->renderCheckPage($current, $latest);
+        echo $this->renderCheckPage($current, $latest, $channel);
+    }
+
+    private function resolveChannel(string $input): string {
+        return in_array($input, ['stable', 'dev'], true) ? $input : 'stable';
     }
 
     // ── Version ──
@@ -100,7 +107,7 @@ class Updater {
 
     // ── GitHub API ──
 
-    private function fetchLatestRelease(): ?array {
+    private function fetchLatestRelease(string $channel = 'stable'): array {
         $context = stream_context_create([
             'http' => [
                 'header' => "User-Agent: PointArt-Updater\r\n",
@@ -111,22 +118,31 @@ class Updater {
         $json = @file_get_contents(self::GITHUB_API, false, $context);
         if ($json === false) return ['error' => 'Could not reach GitHub. Check that your server allows outbound HTTPS requests.'];
 
-        $data = json_decode($json, true);
-        if (!is_array($data) || empty($data['tag_name'])) return ['error' => 'Unexpected response from GitHub API.'];
+        $releases = json_decode($json, true);
+        if (!is_array($releases)) return ['error' => 'Unexpected response from GitHub API.'];
 
-        $tag = $data['tag_name'];
-        if (preg_match('/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?/', $tag, $m) !== 1) {
-            return ['error' => 'Latest release tag "' . htmlspecialchars($tag) . '" is not a valid version. Releases must use semver tags (e.g. v1.2.0).'];
+        $allowedTags = $channel === 'dev' ? ['dev'] : self::ALLOWED_TAGS;
+
+        foreach ($releases as $data) {
+            if (!is_array($data)) continue;
+
+            $tag = strtolower(trim($data['tag_name'] ?? ''));
+            if (!in_array($tag, $allowedTags, true)) continue;
+
+            $name = $data['name'] ?? '';
+            if (preg_match('/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?/', $name, $m) !== 1) continue;
+
+            return [
+                'version'  => $m[0],
+                'tag'      => $tag,
+                'notes'    => $data['body'] ?? '',
+                'zip_url'  => $data['zipball_url'] ?? '',
+                'date'     => $data['published_at'] ?? '',
+            ];
         }
-        $version = $m[0];
 
-        return [
-            'version'  => $version,
-            'tag'      => $data['tag_name'],
-            'notes'    => $data['body'] ?? '',
-            'zip_url'  => $data['zipball_url'] ?? '',
-            'date'     => $data['published_at'] ?? '',
-        ];
+        $label = $channel === 'dev' ? 'dev' : 'stable/patch';
+        return ['error' => 'No ' . $label . ' release found.'];
     }
 
     // ── Update execution ──
@@ -308,15 +324,36 @@ class Updater {
         ');
     }
 
-    private function renderCheckPage(string $current, array $latest): string {
+    private function renderCheckPage(string $current, array $latest, string $channel = 'stable'): string {
         $isUpToDate = version_compare($current, $latest['version'], '>=');
         $notes = htmlspecialchars($latest['notes']);
         $date  = $latest['date'] ? date('F j, Y', strtotime($latest['date'])) : '';
+
+        $stableSelected = $channel === 'stable' ? ' selected' : '';
+        $devSelected    = $channel === 'dev' ? ' selected' : '';
+
+        $channelSelector = '
+            <div class="channel-selector">
+                <label for="channel">Update channel</label>
+                <select id="channel" onchange="window.location.href=\'/pointart/update?channel=\'+this.value">
+                    <option value="stable"' . $stableSelected . '>Stable (Recommended)</option>
+                    <option value="dev"' . $devSelected . '>Dev (<h3 style="color: #92170e;">WARNING:</h3> <h4 style="color: #92400e;">Might be unstable)</h4></option>
+                </select>
+            </div>';
+
+        $devWarning = '';
+        if ($channel === 'dev') {
+            $devWarning = '
+            <div class="warning-box">
+                <strong>&#9888; Dev channel</strong> — This version may be unstable, untested, or incomplete. Only use for development or testing purposes.
+            </div>';
+        }
 
         $updateButton = '';
         if (!$isUpToDate) {
             $updateButton = '
                 <form method="POST" action="/pointart/update/run">
+                    <input type="hidden" name="channel" value="' . htmlspecialchars($channel) . '">
                     <button type="submit" class="btn-update" onclick="this.disabled=true;this.textContent=\'Updating…\';this.form.submit();">Update to v' . htmlspecialchars($latest['version']) . '</button>
                 </form>';
         }
@@ -326,6 +363,8 @@ class Updater {
 
         return $this->layout('PointArt Updater', '
             <h1>PointArt Updater</h1>
+            ' . $channelSelector . '
+            ' . $devWarning . '
             <div class="version-info">
                 <div class="version-row">
                     <span class="label">Installed version</span>
@@ -336,14 +375,18 @@ class Updater {
                     <span class="value">v' . htmlspecialchars($latest['version']) . '</span>
                 </div>
                 <div class="version-row">
+                    <span class="label">Channel</span>
+                    <span class="value">' . htmlspecialchars($latest['tag']) . '</span>
+                </div>
+                <div class="version-row">
                     <span class="label">Status</span>
                     <span class="value ' . $statusClass . '">' . $statusText . '</span>
                 </div>
                 ' . ($date ? '<div class="version-row"><span class="label">Released</span><span class="value">' . $date . '</span></div>' : '') . '
             </div>
-            ' . ($notes ? '<div class="release-notes"><h2>Release Notes</h2><pre>' . $notes . '</pre></div>' : '') . '
+            ' . ($notes ? '<details class="release-notes"><summary>Release Notes</summary><pre>' . $notes . '</pre><a href="https://pointartframework.com/changelog" target="_blank" class="full-notes-link">Full release notes &rarr;</a></details>' : '') . '
             ' . $updateButton . '
-            <a href="/pointart/update" class="btn-secondary" style="display:inline-block;margin-top:1rem;text-decoration:none;">Refresh</a>
+            <a href="/pointart/update?channel=' . htmlspecialchars($channel) . '" class="btn-refresh">&#8635; Check Again</a>
         ');
     }
 
@@ -357,7 +400,7 @@ class Updater {
                 <span class="icon">' . $icon . '</span>
                 <p>' . htmlspecialchars($message) . '</p>
             </div>
-            <a href="/pointart/update" class="btn-secondary" style="display:inline-block;margin-top:1rem;text-decoration:none;">Back to Updater</a>
+            <a href="/pointart/update" class="btn-refresh">&#8592; Back to Updater</a>
         ');
     }
 
@@ -387,14 +430,26 @@ class Updater {
         .btn-update:hover { background: #15803d; }
         .btn-secondary { background: #e5e7eb; color: #333; }
         .btn-secondary:hover { background: #d1d5db; }
+        .btn-refresh { display: inline-block; margin-top: 1rem; padding: 0.6rem 1.4rem; background: #f0f4ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 4px; font-size: 0.95rem; font-weight: 500; text-decoration: none; transition: background 0.15s, border-color 0.15s; }
+        .btn-refresh:hover { background: #dbeafe; border-color: #93c5fd; }
+        .channel-selector { margin-bottom: 1.5rem; }
+        .channel-selector label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.9rem; }
+        .channel-selector select { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95rem; background: #fff; }
+        .warning-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px; padding: 0.8rem 1rem; margin-bottom: 1.5rem; font-size: 0.9rem; color: #92400e; }
         .version-info { margin-bottom: 1.5rem; }
         .version-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0; }
         .version-row .label { color: #666; }
         .version-row .value { font-weight: 600; }
         .up-to-date { color: #16a34a; }
         .update-available { color: #ea580c; }
-        .release-notes { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; padding: 1rem; margin-bottom: 1.5rem; }
-        .release-notes pre { white-space: pre-wrap; word-wrap: break-word; font-size: 0.85rem; line-height: 1.5; }
+        .release-notes { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; padding: 0; margin-bottom: 1.5rem; }
+        .release-notes summary { padding: 0.75rem 1rem; font-weight: 600; font-size: 1rem; cursor: pointer; user-select: none; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+        .release-notes summary::before { content: "\25B6"; font-size: 0.7rem; transition: transform 0.2s; }
+        .release-notes[open] summary::before { transform: rotate(90deg); }
+        .release-notes summary::-webkit-details-marker { display: none; }
+        .release-notes pre { white-space: pre-wrap; word-wrap: break-word; font-size: 0.85rem; line-height: 1.5; padding: 0 1rem 0.75rem; margin: 0; }
+        .full-notes-link { display: block; padding: 0.5rem 1rem 0.75rem; font-size: 0.85rem; color: #2563eb; text-decoration: none; }
+        .full-notes-link:hover { text-decoration: underline; }
         .result { padding: 1.2rem; border-radius: 6px; display: flex; align-items: flex-start; gap: 0.75rem; }
         .result.success { background: #f0fdf4; border: 1px solid #bbf7d0; }
         .result.error { background: #fef2f2; border: 1px solid #fecaca; }
