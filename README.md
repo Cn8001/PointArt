@@ -1,5 +1,7 @@
 # PointArt
 
+[![Sponsor PointArt](https://img.shields.io/github/sponsors/cn8001?label=Sponsor&logo=GitHub&color=ea4aaa)](https://github.com/sponsors/cn8001)
+
 **Ship powerful features with the simplicity of plain PHP.**
 
 A plain PHP micro-framework modelled after Spring Boot's programming model.
@@ -13,8 +15,6 @@ A plain PHP micro-framework modelled after Spring Boot's programming model.
 Views are plain `.php` files — no compilation, no build step, deploy by copying files. Runs on any shared host with PHP 8.1+ and Apache `mod_rewrite`.
 
 **Requires PHP 8.1+**
-
-[![Sponsor PointArt](https://img.shields.io/github/sponsors/cn8001?label=Sponsor&logo=GitHub&color=ea4aaa)](https://github.com/sponsors/cn8001)
 
 ---
 
