@@ -14,6 +14,8 @@ Views are plain `.php` files — no compilation, no build step, deploy by copyin
 
 **Requires PHP 8.1+**
 
+[![Sponsor PointArt](https://img.shields.io/github/sponsors/cn8001?label=Sponsor&logo=GitHub&color=ea4aaa)](https://github.com/sponsors/cn8001)
+
 ---
 
 ## Documentation
@@ -502,6 +504,14 @@ Unmatched routes return a 404 automatically. Uncaught exceptions return a 500 (o
 | `CSRF_ENABLED` | `true` | Enable CSRF token validation for POST form requests |
 | `UPDATER_ENABLED` | `false` | Enable the built-in framework updater route |
 | `UPDATER_SECRET` | — | Secret key required to access the updater |
+
+---
+
+## Support
+
+PointArt is open source and self-funded. If it saves you time or shapes how you think about PHP, consider [sponsoring its development on GitHub](https://github.com/sponsors/cn8001).
+
+Sponsorship pays for documentation, examples, and the time it takes to ship new features.
 
 ---
 
