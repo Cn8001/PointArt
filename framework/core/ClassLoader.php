@@ -29,9 +29,21 @@ namespace PointStart\Core{
             });
         }
 
+        // Recursively register autoloaders so classes in nested directories
+        // resolve on every boot, not just on the cache-miss scan path.
+        private function registerAutoloaderRecursive(string $dir): void {
+            $this->registerAutoloader($dir);
+            if (!is_dir($dir)) return;
+            foreach (scandir($dir) as $entry) {
+                if ($entry === '.' || $entry === '..') continue;
+                $path = $dir . '/' . $entry;
+                if (is_dir($path)) $this->registerAutoloaderRecursive($path);
+            }
+        }
+
         // Load classes — use cache if available, scan if not
         public function loadClasses(string $dir): void {
-            $this->registerAutoloader($dir);
+            $this->registerAutoloaderRecursive($dir);
 
             if (file_exists(self::$cacheFile)) {
                 // Cache hit — no scanning, no Reflection
